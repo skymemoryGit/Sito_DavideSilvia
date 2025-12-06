@@ -52,7 +52,6 @@
             height: 100%;
             position: relative;
             z-index: 1;
-            /* Opacity gestita dal JS dopo il loading */
         }
 
         /* COLONNA SX (Testo/Video - Desktop) */
@@ -74,8 +73,17 @@
             flex: 1;
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         
+        /* Contenitore Canvas per gestire l'altezza */
+        #canvas-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+
         canvas {
             display: block;
             width: 100% !important;
@@ -128,11 +136,19 @@
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         }
 
-        /* UI CONTROLS */
+        /* UI CONTROLS - DEFAULT DESKTOP (Position Absolute) */
         #ui-wrapper {
-            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            z-index: 100; display: flex; flex-direction: column; align-items: center;
-            gap: 15px; width: 100%; pointer-events: none; 
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            pointer-events: none;
         }
         #ui-buttons { display: flex; gap: 30px; pointer-events: auto; }
         
@@ -180,7 +196,7 @@
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-dark); z-index: 9999;
-            display: flex; /* Visibile all'avvio */
+            display: flex; 
             flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 1.2s ease;
         }
@@ -241,36 +257,51 @@
             }
 
             #main-content { 
-                flex-direction: column-reverse; 
+                /* Rimuoviamo column-reverse e usiamo flex-direction: column normale */
+                flex-direction: column;
                 height: auto; 
                 display: flex;
             }
 
-            /* Il Canvas con il 3D sta SOPRA */
+            /* PRIMO ELEMENTO: Sezione 3D + Controlli */
             .content-right { 
-                height: 70vh; /* Altezza della sezione 3D */
+                order: 1; /* Forza questa sezione per prima */
                 width: 100%;
                 display: block;
                 position: relative;
+                height: auto; /* Altezza automatica per contenere canvas e controlli */
+            }
+
+            /* Canvas: occupa il 60% dell'altezza dello schermo */
+            #canvas-container {
+                height: 60vh;
             }
 
             canvas { touch-action: pan-y !important; }
 
-            /* Contenuto testuale SOTTO */
+            /* Controlli UI: NON PIÙ ASSOLUTI SU MOBILE */
+            #ui-wrapper {
+                position: relative; /* Relativo al flusso */
+                bottom: auto; left: auto; transform: none;
+                padding: 20px 0; /* Spazio sopra e sotto */
+                background: var(--bg-dark); /* Sfondo per staccare visivamente */
+                z-index: 20;
+            }
+
+            /* SECONDO ELEMENTO: Testo e Video */
             .content-left { 
+                order: 2; /* Forza questa sezione per seconda */
                 width: 100%;
-                /* FIX SOVRAPPOSIZIONE: Aumentato padding-top per spingere giù il testo */
-                padding: 80px 20px 80px 20px; 
+                /* Padding ridotto sopra perché ora c'è spazio fisico */
+                padding: 40px 20px 80px 20px; 
                 border-right: none; 
                 border-top: 1px solid rgba(212, 175, 55, 0.1); 
-                z-index: 20; /* Assicura che stia sopra se c'è overlap */
-                background: var(--bg-dark); /* Sfondo solido per coprire eventuali elementi sotto */
+                z-index: 10; 
+                background: var(--bg-dark);
                 position: relative;
             }
 
             h1 { font-size: 2.2rem; }
-            /* Posizione dei controlli dentro .content-right */
-            #ui-wrapper { bottom: 30px; } 
             
             footer { 
                 position: relative; bottom: auto; margin-top: 20px; left: 0; transform: none; width: 100%; text-align: center; 
@@ -321,6 +352,8 @@
 
         <div class="content-right">
             
+            <div id="canvas-container"></div>
+            
             <div id="ui-wrapper">
                 <div id="ui-buttons">
                     <button id="btn-sphere">Sfera</button>
@@ -353,11 +386,7 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { gsap } from 'gsap';
 
-        // --- LOGIN LOGIC RIMOSSA ---
-
         const loadingScreen = document.getElementById('loading-screen');
-        // main-content non è più nascosto all'avvio
-        // const mainContent = document.getElementById('main-content'); 
 
         // --- THREE JS LOGIC ---
 
@@ -367,12 +396,14 @@
         const repeats = Math.ceil(targetPieces / totalPhotos);
         const imagePaths = Array.from({length: totalPhotos}, (_, i) => `./foto/${i + 1}.jpg`);
 
-        const containerRight = document.querySelector('.content-right');
+        // MODIFICA: Il renderer ora viene appeso al nuovo contenitore
+        const canvasContainer = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         
         const isMobile = window.innerWidth < 900;
 
-        const camera = new THREE.PerspectiveCamera(50, containerRight.offsetWidth / containerRight.offsetHeight, 0.1, 1000);
+        // MODIFICA: Uso le dimensioni del contenitore canvas, non di content-right
+        const camera = new THREE.PerspectiveCamera(50, canvasContainer.offsetWidth / canvasContainer.offsetHeight, 0.1, 1000);
         
         const minZ = 0.5;  
         const maxZ = isMobile ? 50 : 60;  
@@ -382,7 +413,8 @@
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        containerRight.appendChild(renderer.domElement);
+        // MODIFICA: Append al nuovo container
+        canvasContainer.appendChild(renderer.domElement);
         
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true; controls.dampingFactor = 0.03;
@@ -428,8 +460,9 @@
         const mouse = new THREE.Vector2();
 
         function resize() {
-            const w = containerRight.offsetWidth;
-            const h = containerRight.offsetHeight;
+            // MODIFICA: Uso le dimensioni del contenitore canvas
+            const w = canvasContainer.offsetWidth;
+            const h = canvasContainer.offsetHeight;
             camera.aspect = w / h;
             camera.updateProjectionMatrix();
             renderer.setSize(w, h);
@@ -465,7 +498,7 @@
                     loadingScreen.style.opacity = 0;
                     setTimeout(() => {
                         loadingScreen.style.display = 'none';
-                        document.getElementById('ui-wrapper').style.display = 'flex'; 
+                        // Resize immediato per evitare glitch
                         resize();
                     }, 1200);
                     initScene();
@@ -541,6 +574,8 @@
             setupInteraction();
             setupAutoDynamics();
             animate();
+            // Resize finale dopo setup
+            resize();
         }
 
         function fadeGroup(group, opacity) {
