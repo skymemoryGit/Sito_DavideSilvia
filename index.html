@@ -15,7 +15,6 @@
             --gold-light: #F3E5AB;      
             --bg-dark: #080808;         
             --text-grey: #888888;
-            --error-red: #8a2be2; 
         }
 
         html, body {
@@ -25,9 +24,8 @@
             color: white;
             font-family: 'Montserrat', sans-serif;
             width: 100%;
-            /* Default desktop: fixed height per esperienza immersiva */
             height: 100vh; 
-            overflow: hidden; 
+            overflow: hidden; /* Desktop: no scroll */
         }
 
         body {
@@ -44,7 +42,7 @@
             pointer-events: none;
             z-index: 0;
             opacity: 0.4;
-            background-attachment: fixed; /* Importante per lo scroll mobile */
+            background-attachment: fixed;
         }
 
         #main-content {
@@ -54,11 +52,10 @@
             height: 100%;
             position: relative;
             z-index: 1;
-            opacity: 0; 
-            transition: opacity 2s ease;
+            /* Opacity gestita dal JS dopo il loading */
         }
 
-        /* COLONNA SX (Testo/Video) */
+        /* COLONNA SX (Testo/Video - Desktop) */
         .content-left {
             flex: 0 0 40%;
             display: flex;
@@ -72,7 +69,7 @@
             pointer-events: auto; 
         }
 
-        /* COLONNA DX (3D) */
+        /* COLONNA DX (3D - Desktop) */
         .content-right {
             flex: 1;
             position: relative;
@@ -84,7 +81,6 @@
             width: 100% !important;
             height: 100% !important;
             outline: none;
-            /* Default: touch action none per controllo totale JS */
             touch-action: none; 
         }
 
@@ -180,48 +176,20 @@
 
         @keyframes fadeIn { to { opacity: 1; } }
 
-        /* --- LOGIN SCREEN --- */
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-dark); z-index: 20000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 1s ease, visibility 1s;
-        }
-        .login-content { text-align: center; max-width: 300px; width: 80%; }
-        .login-logo {
-            font-family: 'Cinzel', serif; font-size: 3rem; color: var(--gold);
-            margin-bottom: 40px; letter-spacing: 5px;
-        }
-        .login-input {
-            width: 100%; background: transparent; border: none;
-            border-bottom: 1px solid rgba(255,255,255,0.3);
-            color: white; font-family: 'Montserrat', sans-serif; font-size: 1.2rem;
-            text-align: center; padding: 10px; letter-spacing: 3px;
-            outline: none; transition: border-color 0.3s;
-            margin-bottom: 30px;
-        }
-        .login-input:focus { border-bottom-color: var(--gold); }
-        .login-btn {
-            background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold);
-            color: var(--gold); padding: 12px 30px; font-family: 'Cinzel', serif;
-            font-size: 0.9rem; letter-spacing: 2px; cursor: pointer;
-            transition: all 0.3s; text-transform: uppercase;
-        }
-        .login-btn:hover { background: var(--gold); color: #000; }
-        .error-shake { animation: shake 0.5s; border-bottom-color: #ff4444 !important; }
-        @keyframes shake {
-            0% { transform: translateX(0); } 25% { transform: translateX(-10px); }
-            50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } 100% { transform: translateX(0); }
-        }
-
         /* LOADING & MODAL */
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-dark); z-index: 9999;
-            display: none;
+            display: flex; /* Visibile all'avvio */
             flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 1.2s ease;
         }
+        .loading-logo {
+            font-family: 'Cinzel', serif; font-size: 4rem; color: var(--gold);
+            margin-bottom: 20px; letter-spacing: 5px; animation: pulse 3s infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
         .loader-line {
             width: 150px; height: 1px; background: #222; margin-top: 20px; position: relative; overflow: hidden;
         }
@@ -263,9 +231,8 @@
             color: rgba(255,255,255,0.2); font-size: 0.7rem; letter-spacing: 1px; z-index: 10;
         }
 
-        /* --- MOBILE OPTIMIZATION (CRITICO PER SCROLL) --- */
+        /* --- MOBILE OPTIMIZATION --- */
         @media (max-width: 900px) {
-            /* Sblocchiamo lo scroll verticale su mobile */
             html, body {
                 height: auto;
                 min-height: 100%;
@@ -275,59 +242,43 @@
 
             #main-content { 
                 flex-direction: column-reverse; 
-                height: auto; /* Adatta l'altezza al contenuto */
-                display: block; /* Rimuove flex che potrebbe causare problemi di altezza */
+                height: auto; 
+                display: flex;
             }
 
-            /* Il Canvas occupa il 75% della viewport iniziale */
+            /* Il Canvas con il 3D sta SOPRA */
             .content-right { 
-                height: 75vh; 
+                height: 70vh; /* Altezza della sezione 3D */
                 width: 100%;
                 display: block;
+                position: relative;
             }
 
-            /* IMPORTANTISSIMO: pan-y permette lo scroll verticale sopra il canvas */
-            canvas {
-                touch-action: pan-y !important;
-            }
+            canvas { touch-action: pan-y !important; }
 
-            /* Contenuto testuale sotto */
+            /* Contenuto testuale SOTTO */
             .content-left { 
                 width: 100%;
-                min-height: 50vh; /* Spazio sufficiente per video e footer */
-                padding: 40px 20px 100px 20px; 
+                /* FIX SOVRAPPOSIZIONE: Aumentato padding-top per spingere giù il testo */
+                padding: 80px 20px 80px 20px; 
                 border-right: none; 
                 border-top: 1px solid rgba(212, 175, 55, 0.1); 
-                z-index: 10; 
-                background: var(--bg-dark);
+                z-index: 20; /* Assicura che stia sopra se c'è overlap */
+                background: var(--bg-dark); /* Sfondo solido per coprire eventuali elementi sotto */
                 position: relative;
             }
 
             h1 { font-size: 2.2rem; }
-            #ui-wrapper { bottom: 20px; }
+            /* Posizione dei controlli dentro .content-right */
+            #ui-wrapper { bottom: 30px; } 
             
             footer { 
-                position: relative; 
-                bottom: auto; 
-                margin-top: 20px; 
-                left: 0; 
-                transform: none; 
-                width: 100%; 
-                text-align: center; 
+                position: relative; bottom: auto; margin-top: 20px; left: 0; transform: none; width: 100%; text-align: center; 
             }
         }
     </style>
 </head>
 <body>
-
-    <div id="login-screen">
-        <div class="login-content">
-            <div class="login-logo">D&S</div>
-            <p style="color:#666; font-size:0.7rem; letter-spacing:2px; margin-bottom:30px; text-transform:uppercase;">Area Riservata</p>
-            <input type="password" id="password-input" class="login-input" placeholder="CODE">
-            <button id="login-btn" class="login-btn">Entra</button>
-        </div>
-    </div>
 
     <div id="loading-screen">
         <div class="loading-logo">D&S</div>
@@ -402,52 +353,16 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { gsap } from 'gsap';
 
-        // --- HASHING UTILITY ---
-        async function sha256(message) {
-            const msgBuffer = new TextEncoder().encode(message);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
+        // --- LOGIN LOGIC RIMOSSA ---
 
-        const TARGET_HASH = "259bed3fb0c391c3dc899d94c5700bcb48c12e4c008fc79831a12fc7ee925cba";
-
-        // --- LOGIN LOGIC ---
-        const loginScreen = document.getElementById('login-screen');
-        const loginBtn = document.getElementById('login-btn');
-        const passInput = document.getElementById('password-input');
         const loadingScreen = document.getElementById('loading-screen');
-        const mainContent = document.getElementById('main-content');
-
-        async function checkPassword() {
-            const inputVal = passInput.value.trim().toLowerCase();
-            const inputHash = await sha256(inputVal);
-
-            if(inputHash === TARGET_HASH) {
-                loginScreen.style.opacity = '0';
-                setTimeout(() => {
-                    loginScreen.style.display = 'none';
-                    loadingScreen.style.display = 'flex';
-                    mainContent.style.opacity = '1';
-                    loadImagesAndStart(); 
-                }, 1000);
-            } else {
-                passInput.classList.add('error-shake');
-                setTimeout(() => passInput.classList.remove('error-shake'), 500);
-                passInput.value = '';
-            }
-        }
-
-        loginBtn.addEventListener('click', checkPassword);
-        passInput.addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') checkPassword();
-        });
+        // main-content non è più nascosto all'avvio
+        // const mainContent = document.getElementById('main-content'); 
 
         // --- THREE JS LOGIC ---
 
-        // MODIFICA PARAMETRI RICHIESTI
-        const totalPhotos = 15; 
-        const targetPieces = 750; 
+        const totalPhotos = 25;  
+        const targetPieces = 800; 
         
         const repeats = Math.ceil(targetPieces / totalPhotos);
         const imagePaths = Array.from({length: totalPhotos}, (_, i) => `./foto/${i + 1}.jpg`);
@@ -459,7 +374,6 @@
 
         const camera = new THREE.PerspectiveCamera(50, containerRight.offsetWidth / containerRight.offsetHeight, 0.1, 1000);
         
-        // Settings Zoom immersivo
         const minZ = 0.5;  
         const maxZ = isMobile ? 50 : 60;  
         const initialZ = isMobile ? 22 : 28; 
@@ -475,18 +389,13 @@
         controls.autoRotate = true; controls.autoRotateSpeed = 0.4;
         controls.enablePan = false;
         
-        // Zoom e Gestione Touch Mobile
         controls.enableZoom = true; 
         controls.zoomSpeed = 0.8;
         controls.minDistance = minZ; 
         controls.maxDistance = maxZ; 
         
-        // Questo è il segreto per il mobile: non ruotare su asse verticale col touch
-        // perché quel gesto serve per scrollare la pagina (grazie al CSS touch-action: pan-y)
         if(isMobile) {
             controls.rotateSpeed = 0.7;
-            // Limitiamo leggermente l'angolo polare per evitare conflitti estremi,
-            // ma il vero lavoro lo fa il CSS touch-action: pan-y
         }
 
         const zoomSlider = document.getElementById('zoom-slider');
@@ -728,6 +637,9 @@
             }
             renderer.render(scene, camera);
         }
+
+        // Avvio diretto del caricamento
+        loadImagesAndStart();
     </script>
 </body>
 </html>
