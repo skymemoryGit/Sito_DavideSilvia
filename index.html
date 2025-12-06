@@ -27,6 +27,7 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
+            touch-action: none; /* Impedisce zoom browser nativo per favorire canvas */
         }
 
         /* TEXTURE DI SFONDO */
@@ -62,6 +63,7 @@
             box-sizing: border-box;
             background: radial-gradient(circle at top left, rgba(30,30,30,0.4), transparent 70%);
             border-right: 1px solid rgba(212, 175, 55, 0.1);
+            pointer-events: auto; /* Riabilita click su questa colonna */
         }
 
         /* COLONNA DX */
@@ -76,6 +78,7 @@
             width: 100% !important;
             height: 100% !important;
             outline: none;
+            touch-action: none; /* Fondamentale per le gesture su mobile */
         }
 
         /* TYPOGRAPHY */
@@ -126,9 +129,9 @@
         #ui-wrapper {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
             z-index: 100; display: flex; flex-direction: column; align-items: center;
-            gap: 15px; width: 100%;
+            gap: 15px; width: 100%; pointer-events: none; /* Lascia passare i click al canvas dove non ci sono bottoni */
         }
-        #ui-buttons { display: flex; gap: 30px; }
+        #ui-buttons { display: flex; gap: 30px; pointer-events: auto; }
         
         button {
             background: transparent; border: none; color: rgba(255,255,255,0.4);
@@ -150,6 +153,7 @@
         .zoom-container {
             display: flex; align-items: center; justify-content: center;
             gap: 15px; opacity: 0; animation: fadeIn 2s forwards 1s;
+            pointer-events: auto;
         }
         .zoom-label {
             font-family: 'Montserrat', sans-serif; font-size: 0.7rem; 
@@ -352,7 +356,6 @@
         import { gsap } from 'gsap';
 
         // --- HASHING UTILITY ---
-        // Funzione per calcolare l'hash SHA-256 di una stringa
         async function sha256(message) {
             const msgBuffer = new TextEncoder().encode(message);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -360,7 +363,6 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-       
         const TARGET_HASH = "259bed3fb0c391c3dc899d94c5700bcb48c12e4c008fc79831a12fc7ee925cba";
 
         // --- LOGIN LOGIC ---
@@ -375,7 +377,6 @@
             const inputHash = await sha256(inputVal);
 
             if(inputHash === TARGET_HASH) {
-                // Password corretta (Hash coincidono)
                 loginScreen.style.opacity = '0';
                 setTimeout(() => {
                     loginScreen.style.display = 'none';
@@ -384,7 +385,6 @@
                     loadImagesAndStart(); 
                 }, 1000);
             } else {
-                // Password errata
                 passInput.classList.add('error-shake');
                 setTimeout(() => passInput.classList.remove('error-shake'), 500);
                 passInput.value = '';
@@ -396,9 +396,9 @@
             if(e.key === 'Enter') checkPassword();
         });
 
-        // --- THREE JS LOGIC (Standard) ---
+        // --- THREE JS LOGIC ---
 
-        const totalPhotos = 150; 
+        const totalPhotos = 100; 
         const targetPieces = 800; 
         const repeats = Math.ceil(targetPieces / totalPhotos);
         const imagePaths = Array.from({length: totalPhotos}, (_, i) => `./foto/${i + 1}.jpg`);
@@ -410,7 +410,9 @@
 
         const camera = new THREE.PerspectiveCamera(50, containerRight.offsetWidth / containerRight.offsetHeight, 0.1, 1000);
         
-        const minZ = isMobile ? 12 : 15;  
+        // --- MODIFICA ZOOM: Limiti estesi per entrare nell'oggetto ---
+        // minZ ora è 0.5 per permettere di entrare "dentro"
+        const minZ = 0.5;  
         const maxZ = isMobile ? 50 : 60;  
         const initialZ = isMobile ? 22 : 28; 
 
@@ -423,23 +425,56 @@
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true; controls.dampingFactor = 0.03;
         controls.autoRotate = true; controls.autoRotateSpeed = 0.4;
-        controls.enableZoom = false; 
         controls.enablePan = false;
+        
+        // --- MODIFICA ZOOM: Abilitazione controlli nativi ---
+        controls.enableZoom = true; 
+        controls.zoomSpeed = 0.8;
+        controls.minDistance = minZ; // Permette di avvicinarsi moltissimo
+        controls.maxDistance = maxZ; // Limita l'allontanamento
 
         const zoomSlider = document.getElementById('zoom-slider');
-        function getSliderValueFromZ(z) {
-            const normalized = (z - minZ) / (maxZ - minZ); 
-            return (1 - normalized) * 100;
-        }
-        zoomSlider.value = getSliderValueFromZ(initialZ);
+        let isDraggingSlider = false; // Flag per evitare conflitti
 
+        // Funzione per mappare Distanza Camera -> Slider (0-100)
+        function updateSliderFromCamera() {
+            if (isDraggingSlider) return; // Se l'utente sta usando lo slider, non aggiornarlo automaticamente
+            
+            // Usiamo la distanza dal target (0,0,0) invece della sola Z per essere precisi
+            const dist = camera.position.distanceTo(controls.target);
+            
+            // Normalizziamo: se dist == minZ (vicino) -> 100, se dist == maxZ (lontano) -> 0
+            // Formula inversa rispetto a prima
+            const percentage = 100 - ((dist - minZ) / (maxZ - minZ) * 100);
+            
+            // Clamp valori
+            zoomSlider.value = Math.max(0, Math.min(100, percentage));
+        }
+
+        // Funzione per mappare Slider -> Distanza Camera
         function updateZoom(sliderValue) {
             const normalized = sliderValue / 100;
-            const inverted = 1 - normalized; 
-            const newZ = minZ + (inverted * (maxZ - minZ));
-            camera.position.z = newZ;
+            const inverted = 1 - normalized; // 100 è vicino (0 distanza agg.), 0 è lontano
+            const newDist = minZ + (inverted * (maxZ - minZ));
+            
+            // Muoviamo la camera lungo il vettore di visuale attuale
+            const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
+            camera.position.copy(controls.target).add(direction.multiplyScalar(newDist));
         }
-        zoomSlider.addEventListener('input', (e) => { updateZoom(parseFloat(e.target.value)); });
+
+        // Eventi Slider
+        zoomSlider.addEventListener('mousedown', () => { isDraggingSlider = true; });
+        zoomSlider.addEventListener('touchstart', () => { isDraggingSlider = true; }, {passive: true});
+        
+        zoomSlider.addEventListener('input', (e) => { 
+            updateZoom(parseFloat(e.target.value)); 
+        });
+        
+        zoomSlider.addEventListener('mouseup', () => { isDraggingSlider = false; });
+        zoomSlider.addEventListener('touchend', () => { isDraggingSlider = false; });
+
+        // Imposta valore iniziale
+        updateSliderFromCamera();
 
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
@@ -645,6 +680,11 @@
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
+            
+            // --- SYNC ZOOM ---
+            // Aggiorna lo slider se l'utente sta usando le gesture (mouse/touch)
+            updateSliderFromCamera();
+
             if (currentGroup && currentGroup.visible && !isModalOpen) {
                 currentGroup.rotation.y += 0.0005;
                 if(!gsap.isTweening(currentGroup.rotation)) {
