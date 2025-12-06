@@ -18,16 +18,21 @@
             --error-red: #8a2be2; 
         }
 
-        body {
+        html, body {
             margin: 0;
+            padding: 0;
             background-color: var(--bg-dark);
             color: white;
             font-family: 'Montserrat', sans-serif;
-            height: 100vh;
-            overflow: hidden;
+            width: 100%;
+            /* Default desktop: fixed height per esperienza immersiva */
+            height: 100vh; 
+            overflow: hidden; 
+        }
+
+        body {
             display: flex;
             flex-direction: column;
-            touch-action: none; /* Impedisce zoom browser nativo per favorire canvas */
         }
 
         /* TEXTURE DI SFONDO */
@@ -39,6 +44,7 @@
             pointer-events: none;
             z-index: 0;
             opacity: 0.4;
+            background-attachment: fixed; /* Importante per lo scroll mobile */
         }
 
         #main-content {
@@ -52,7 +58,7 @@
             transition: opacity 2s ease;
         }
 
-        /* COLONNA SX */
+        /* COLONNA SX (Testo/Video) */
         .content-left {
             flex: 0 0 40%;
             display: flex;
@@ -63,10 +69,10 @@
             box-sizing: border-box;
             background: radial-gradient(circle at top left, rgba(30,30,30,0.4), transparent 70%);
             border-right: 1px solid rgba(212, 175, 55, 0.1);
-            pointer-events: auto; /* Riabilita click su questa colonna */
+            pointer-events: auto; 
         }
 
-        /* COLONNA DX */
+        /* COLONNA DX (3D) */
         .content-right {
             flex: 1;
             position: relative;
@@ -78,7 +84,8 @@
             width: 100% !important;
             height: 100% !important;
             outline: none;
-            touch-action: none; /* Fondamentale per le gesture su mobile */
+            /* Default: touch action none per controllo totale JS */
+            touch-action: none; 
         }
 
         /* TYPOGRAPHY */
@@ -105,7 +112,7 @@
 
         /* VIDEO FRAME */
         .video-container-luxury {
-            position: relative; width: 100%; max-width: 500px; padding: 15px;
+            position: relative; width: 100%; max-width: 500px; padding: 15px; margin-bottom: 40px;
         }
         .video-border-outer {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -129,7 +136,7 @@
         #ui-wrapper {
             position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
             z-index: 100; display: flex; flex-direction: column; align-items: center;
-            gap: 15px; width: 100%; pointer-events: none; /* Lascia passare i click al canvas dove non ci sono bottoni */
+            gap: 15px; width: 100%; pointer-events: none; 
         }
         #ui-buttons { display: flex; gap: 30px; pointer-events: auto; }
         
@@ -256,18 +263,58 @@
             color: rgba(255,255,255,0.2); font-size: 0.7rem; letter-spacing: 1px; z-index: 10;
         }
 
+        /* --- MOBILE OPTIMIZATION (CRITICO PER SCROLL) --- */
         @media (max-width: 900px) {
-            body { height: auto; overflow-y: auto; overflow-x: hidden; }
-            #main-content { flex-direction: column-reverse; }
-            .content-right { height: 75vh; min-height: 500px; width: 100%; }
-            .content-left { 
-                padding: 40px 20px 80px 20px; border-right: none; 
-                border-top: 1px solid rgba(212, 175, 55, 0.1); 
-                z-index: 10; background: var(--bg-dark);
+            /* Sblocchiamo lo scroll verticale su mobile */
+            html, body {
+                height: auto;
+                min-height: 100%;
+                overflow-y: auto !important;
+                -webkit-overflow-scrolling: touch;
             }
+
+            #main-content { 
+                flex-direction: column-reverse; 
+                height: auto; /* Adatta l'altezza al contenuto */
+                display: block; /* Rimuove flex che potrebbe causare problemi di altezza */
+            }
+
+            /* Il Canvas occupa il 75% della viewport iniziale */
+            .content-right { 
+                height: 75vh; 
+                width: 100%;
+                display: block;
+            }
+
+            /* IMPORTANTISSIMO: pan-y permette lo scroll verticale sopra il canvas */
+            canvas {
+                touch-action: pan-y !important;
+            }
+
+            /* Contenuto testuale sotto */
+            .content-left { 
+                width: 100%;
+                min-height: 50vh; /* Spazio sufficiente per video e footer */
+                padding: 40px 20px 100px 20px; 
+                border-right: none; 
+                border-top: 1px solid rgba(212, 175, 55, 0.1); 
+                z-index: 10; 
+                background: var(--bg-dark);
+                position: relative;
+            }
+
             h1 { font-size: 2.2rem; }
             #ui-wrapper { bottom: 20px; }
-            footer { position: relative; bottom: auto; margin-top: 30px; left: 0; transform: none; width: 100%; text-align: center; }
+            
+            footer { 
+                position: relative; 
+                bottom: auto; 
+                margin-top: 20px; 
+                left: 0; 
+                transform: none; 
+                width: 100%; 
+                text-align: center; 
+            }
         }
     </style>
 </head>
@@ -398,8 +445,10 @@
 
         // --- THREE JS LOGIC ---
 
+        // MODIFICA PARAMETRI RICHIESTI
         const totalPhotos = 15; 
-        const targetPieces = 800; 
+        const targetPieces = 750; 
+        
         const repeats = Math.ceil(targetPieces / totalPhotos);
         const imagePaths = Array.from({length: totalPhotos}, (_, i) => `./foto/${i + 1}.jpg`);
 
@@ -410,8 +459,7 @@
 
         const camera = new THREE.PerspectiveCamera(50, containerRight.offsetWidth / containerRight.offsetHeight, 0.1, 1000);
         
-        // --- MODIFICA ZOOM: Limiti estesi per entrare nell'oggetto ---
-        // minZ ora è 0.5 per permettere di entrare "dentro"
+        // Settings Zoom immersivo
         const minZ = 0.5;  
         const maxZ = isMobile ? 50 : 60;  
         const initialZ = isMobile ? 22 : 28; 
@@ -427,53 +475,44 @@
         controls.autoRotate = true; controls.autoRotateSpeed = 0.4;
         controls.enablePan = false;
         
-        // --- MODIFICA ZOOM: Abilitazione controlli nativi ---
+        // Zoom e Gestione Touch Mobile
         controls.enableZoom = true; 
         controls.zoomSpeed = 0.8;
-        controls.minDistance = minZ; // Permette di avvicinarsi moltissimo
-        controls.maxDistance = maxZ; // Limita l'allontanamento
+        controls.minDistance = minZ; 
+        controls.maxDistance = maxZ; 
+        
+        // Questo è il segreto per il mobile: non ruotare su asse verticale col touch
+        // perché quel gesto serve per scrollare la pagina (grazie al CSS touch-action: pan-y)
+        if(isMobile) {
+            controls.rotateSpeed = 0.7;
+            // Limitiamo leggermente l'angolo polare per evitare conflitti estremi,
+            // ma il vero lavoro lo fa il CSS touch-action: pan-y
+        }
 
         const zoomSlider = document.getElementById('zoom-slider');
-        let isDraggingSlider = false; // Flag per evitare conflitti
+        let isDraggingSlider = false;
 
-        // Funzione per mappare Distanza Camera -> Slider (0-100)
         function updateSliderFromCamera() {
-            if (isDraggingSlider) return; // Se l'utente sta usando lo slider, non aggiornarlo automaticamente
-            
-            // Usiamo la distanza dal target (0,0,0) invece della sola Z per essere precisi
+            if (isDraggingSlider) return; 
             const dist = camera.position.distanceTo(controls.target);
-            
-            // Normalizziamo: se dist == minZ (vicino) -> 100, se dist == maxZ (lontano) -> 0
-            // Formula inversa rispetto a prima
             const percentage = 100 - ((dist - minZ) / (maxZ - minZ) * 100);
-            
-            // Clamp valori
             zoomSlider.value = Math.max(0, Math.min(100, percentage));
         }
 
-        // Funzione per mappare Slider -> Distanza Camera
         function updateZoom(sliderValue) {
             const normalized = sliderValue / 100;
-            const inverted = 1 - normalized; // 100 è vicino (0 distanza agg.), 0 è lontano
+            const inverted = 1 - normalized; 
             const newDist = minZ + (inverted * (maxZ - minZ));
-            
-            // Muoviamo la camera lungo il vettore di visuale attuale
             const direction = new THREE.Vector3().subVectors(camera.position, controls.target).normalize();
             camera.position.copy(controls.target).add(direction.multiplyScalar(newDist));
         }
 
-        // Eventi Slider
         zoomSlider.addEventListener('mousedown', () => { isDraggingSlider = true; });
         zoomSlider.addEventListener('touchstart', () => { isDraggingSlider = true; }, {passive: true});
-        
-        zoomSlider.addEventListener('input', (e) => { 
-            updateZoom(parseFloat(e.target.value)); 
-        });
-        
+        zoomSlider.addEventListener('input', (e) => { updateZoom(parseFloat(e.target.value)); });
         zoomSlider.addEventListener('mouseup', () => { isDraggingSlider = false; });
         zoomSlider.addEventListener('touchend', () => { isDraggingSlider = false; });
 
-        // Imposta valore iniziale
         updateSliderFromCamera();
 
         const raycaster = new THREE.Raycaster();
@@ -680,11 +719,7 @@
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
-            
-            // --- SYNC ZOOM ---
-            // Aggiorna lo slider se l'utente sta usando le gesture (mouse/touch)
             updateSliderFromCamera();
-
             if (currentGroup && currentGroup.visible && !isModalOpen) {
                 currentGroup.rotation.y += 0.0005;
                 if(!gsap.isTweening(currentGroup.rotation)) {
