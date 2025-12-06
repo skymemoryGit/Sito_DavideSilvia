@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mosaico 3D di Foto</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000; /* Sfondo nero puro per far risaltare le foto */
+            font-family: sans-serif;
+        }
+        #ui-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        button.active {
+            background: rgba(50, 150, 255, 0.5); /* Blu per attivo */
+            border-color: rgb(100, 200, 255);
+        }
+        #loading {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: white; font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">Caricamento foto in corso...</div>
+    <div id="ui-container" style="display:none;">
+        <button id="btn-sphere" class="active">Sfera Foto</button>
+        <button id="btn-cube">Cubo Foto</button>
+        <button id="btn-torus">Ciambella Foto</button>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- CONFIGURAZIONE IMMAGINI (IMPORTANTE!) ---
+        // SOSTITUISCI QUESTI URL CON I PERCORSI LOCALI DELLE TUE FOTO.
+        // Esempio locale: './7photo/img1.jpg', './7photo/img2.jpg', ...
+        // Più ne metti, più sarà vario. Ne bastano 10-15 per un buon effetto.
+        const imagePaths = [
+            'https://picsum.photos/id/10/200/200', // Bosco
+            'https://picsum.photos/id/20/200/200', // Scrivania
+            'https://picsum.photos/id/30/200/200', // Tazza
+            'https://picsum.photos/id/40/200/200', // Gatto
+            'https://picsum.photos/id/50/200/200', // Pc
+            'https://picsum.photos/id/60/200/200', // Ufficio
+            'https://picsum.photos/id/70/200/200', // Albero
+            'https://picsum.photos/id/80/200/200'  // Montagna
+        ];
+        // --------------------------------------------
+
+        const scene = new THREE.Scene();
+        // Nebbia nera per far sparire dolcemente i punti lontani
+        scene.fog = new THREE.FogExp2(0x000000, 0.03);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 7;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        // Rallentiamo un po' l'autorotazione per goderci le foto
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+
+        // --- GESTIONE CARICAMENTO TEXTURE ---
+        const textureLoader = new THREE.TextureLoader();
+        const loadedTextures = [];
+        let texturesLoadedCount = 0;
+
+        function loadAllTextures(callback) {
+            imagePaths.forEach(path => {
+                textureLoader.load(
+                    path,
+                    // onLoad callback
+                    (texture) => {
+                        // *** QUI STA LA MAGIA PER LO ZOOM ***
+                        // LinearMipmapLinearFilter è il migliore per la qualità quando si rimpicciolisce.
+                        texture.minFilter = THREE.LinearMipmapLinearFilter;
+                        // LinearFilter serve per quando si ingrandisce (evita i cubettoni pixellosi).
+                        texture.magFilter = THREE.LinearFilter;
+                        // Migliora la nitidezza quando le foto sono viste di taglio.
+                        texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+                        
+                        loadedTextures.push(texture);
+                        texturesLoadedCount++;
+                        if (texturesLoadedCount === imagePaths.length) {
+                            callback(); // Tutto caricato!
+                        }
+                    },
+                    undefined, // onProgress
+                    (err) => console.error("Errore caricamento immagine:", path, err)
+                );
+            });
+        }
+
+
+        // --- FUNZIONE PER CREARE GRUPPI DI PUNTI FOTOGRAFICI ---
+        // Invece di un unico oggetto Points, crea un GRUPPO contenente
+        // diversi oggetti Points, ognuno con una foto diversa.
+        function createPhotoGroups(geometry, textures, particleSize = 0.25) {
+            const mainGroup = new THREE.Group();
+            const positions = geometry.getAttribute('position').array;
+            const totalVertices = positions.length / 3;
+            
+            // Creiamo un array di indici e lo mescoliamo per distribuire le foto casualmente
+            let indices = Array.from({length: totalVertices}, (_, i) => i);
+            indices.sort(() => Math.random() - 0.5); // Shuffle semplice
+
+            const numTextures = textures.length;
+            // Quanti punti assegnare a ciascuna foto
+            const chunkSize = Math.ceil(totalVertices / numTextures);
+
+            for (let t = 0; t < numTextures; t++) {
+                const chunkPositions = [];
+                
+                // Prendi una fetta degli indici mescolati
+                const start = t * chunkSize;
+                const end = Math.min((t + 1) * chunkSize, totalVertices);
+
+                for (let i = start; i < end; i++) {
+                    const vertexIndex = indices[i];
+                    // Aggiungi un po' di "rumore" casuale alla posizione per non farli sembrare troppo ordinati
+                    const jitter = 0.15;
+                    const x = positions[vertexIndex * 3] + (Math.random() -0.5) * jitter;
+                    const y = positions[vertexIndex * 3 + 1] + (Math.random() -0.5) * jitter;
+                    const z = positions[vertexIndex * 3 + 2] + (Math.random() -0.5) * jitter;
+                    chunkPositions.push(x, y, z);
+                }
+
+                if (chunkPositions.length === 0) continue;
+
+                const chunkGeo = new THREE.BufferGeometry();
+                chunkGeo.setAttribute('position', new THREE.Float32BufferAttribute(chunkPositions, 3));
+
+                const chunkMaterial = new THREE.PointsMaterial({
+                    size: particleSize,
+                    map: textures[t], // Assegna UNA delle foto a questo gruppo
+                    transparent: true,
+                    alphaTest: 0.1, // Aiuta se le foto hanno trasparenza (png)
+                    sizeAttenuation: true, // I punti diventano grandi se vicini
+                    color: 0xffffff // Colore bianco per non alterare la foto
+                });
+
+                const pointsMesh = new THREE.Points(chunkGeo, chunkMaterial);
+                mainGroup.add(pointsMesh);
+            }
+
+            return mainGroup;
+        }
+
+        // Variabili globali per gli oggetti
+        let sphereGroup, cubeGroup, torusGroup;
+        const btnSphere = document.getElementById('btn-sphere');
+        const btnCube = document.getElementById('btn-cube');
+        const btnTorus = document.getElementById('btn-torus');
+
+        // --- INIZIALIZZAZIONE SCENA (DOPO IL CARICAMENTO FOTO) ---
+        function initScene() {
+             // Nascondi loading, mostra UI
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('ui-container').style.display = 'block';
+
+            // Aumentiamo i segmenti per avere PIÙ punti (più foto)
+            const sphereGeo = new THREE.SphereGeometry(3, 80, 80);
+            sphereGroup = createPhotoGroups(sphereGeo, loadedTextures, 0.25);
+            scene.add(sphereGroup);
+
+            const cubeGeo = new THREE.BoxGeometry(4, 4, 4, 30, 30, 30);
+            cubeGroup = createPhotoGroups(cubeGeo, loadedTextures, 0.25);
+            scene.add(cubeGroup);
+            cubeGroup.visible = false;
+
+            const torusGeo = new THREE.TorusGeometry(2.5, 1, 40, 120);
+            // Il toro ha bisogno di punti un po' più piccoli perché sono più densi
+            torusGroup = createPhotoGroups(torusGeo, loadedTextures, 0.20);
+            scene.add(torusGroup);
+            torusGroup.visible = false;
+
+            // --- GESTIONE CLICK ---
+            function setActiveShape(shapeName) {
+                sphereGroup.visible = false;
+                cubeGroup.visible = false;
+                torusGroup.visible = false;
+                btnSphere.classList.remove('active');
+                btnCube.classList.remove('active');
+                btnTorus.classList.remove('active');
+
+                if (shapeName === 'sphere') {
+                    sphereGroup.visible = true;
+                    btnSphere.classList.add('active');
+                } else if (shapeName === 'cube') {
+                    cubeGroup.visible = true;
+                    btnCube.classList.add('active');
+                } else if (shapeName === 'torus') {
+                    torusGroup.visible = true;
+                    btnTorus.classList.add('active');
+                }
+            }
+
+            btnSphere.addEventListener('click', () => setActiveShape('sphere'));
+            btnCube.addEventListener('click', () => setActiveShape('cube'));
+            btnTorus.addEventListener('click', () => setActiveShape('torus'));
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // AVVIO: Carica le texture, POI inizializza la scena
+        loadAllTextures(initScene);
+
+    </script>
+</body>
+</html>

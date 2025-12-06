@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particelle 3D Interattive</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #111; /* Sfondo scuro come nelle foto */
+            font-family: sans-serif;
+        }
+        #ui-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+        }
+        button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        button.active {
+            background: rgba(50, 255, 100, 0.4); /* Evidenzia il bottone attivo */
+            border-color: rgb(50, 255, 100);
+        }
+    </style>
+</head>
+<body>
+    <div id="ui-container">
+        <button id="btn-sphere" class="active">Sfera</button>
+        <button id="btn-cube">Cubo</button>
+        <button id="btn-torus">Toro</button>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // --- SETUP DI BASE (Scena, Camera, Renderer) ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x111111); // Sfondo molto scuro
+        // Aggiungiamo un po' di nebbia per profondità
+        scene.fog = new THREE.FogExp2(0x111111, 0.04);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.z = 6;
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // --- CONTROLLI (Come Blender) ---
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; // Effetto inerzia fluido
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;    // Attiva la rotazione automatica
+        controls.autoRotateSpeed = 1.0; // Velocità di rotazione "figa"
+
+        // --- FUNZIONE PER CREARE LE "NUVOLA DI PUNTI" COLORATE ---
+        function createColoredPoints(geometry, particleSize = 0.08) {
+            const positionAttribute = geometry.getAttribute('position');
+            const colors = [];
+            const positions = [];
+            
+            // Palette di colori neon (Verde, Blu, Viola, Bianco)
+            const colorPalette = [
+                new THREE.Color(0x00ff44), // Verde neon
+                new THREE.Color(0x0088ff), // Blu elettrico
+                new THREE.Color(0x9900ff), // Viola
+                new THREE.Color(0xffffff)  // Bianco
+            ];
+
+            for (let i = 0; i < positionAttribute.count; i++) {
+                // Aggiungiamo un po' di "rumore" casuale alle posizioni per renderle meno perfette, come nelle foto
+                let x = positionAttribute.getX(i) + (Math.random() - 0.5) * 0.2;
+                let y = positionAttribute.getY(i) + (Math.random() - 0.5) * 0.2;
+                let z = positionAttribute.getZ(i) + (Math.random() - 0.5) * 0.2;
+                positions.push(x, y, z);
+
+                // Assegna un colore casuale dalla palette
+                const color = colorPalette[Math.floor(Math.random() * colorPalette.length)];
+                colors.push(color.r, color.g, color.b);
+            }
+            
+            const pointsGeometry = new THREE.BufferGeometry();
+            pointsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            pointsGeometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+
+            // Materiale specifico per i punti
+            const pointsMaterial = new THREE.PointsMaterial({
+                size: particleSize,
+                vertexColors: true, // Usa i colori che abbiamo definito sopra
+                map: createSquareTexture(), // Usa una texture quadrata
+                alphaTest: 0.5,
+                transparent: true,
+                sizeAttenuation: true // I punti lontani sono più piccoli
+            });
+
+            const pointCloud = new THREE.Points(pointsGeometry, pointsMaterial);
+            return pointCloud;
+        }
+
+        // Funzione helper per creare una texture quadrata semplice (per le particelle)
+        function createSquareTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const context = canvas.getContext('2d');
+            context.fillStyle = '#ffffff';
+            context.fillRect(0, 0, 64, 64);
+            const texture = new THREE.CanvasTexture(canvas);
+            return texture;
+        }
+
+        // --- CREAZIONE DEGLI OGGETTI ---
+        // Sfera (Immagine 0)
+        const sphereGeo = new THREE.SphereGeometry(2.5, 64, 64); // Tanti segmenti = tanti punti
+        const spherePoints = createColoredPoints(sphereGeo);
+        scene.add(spherePoints);
+
+        // Cubo (Immagine 1)
+        const cubeGeo = new THREE.BoxGeometry(3.5, 3.5, 3.5, 24, 24, 24);
+        const cubePoints = createColoredPoints(cubeGeo);
+        scene.add(cubePoints);
+        cubePoints.visible = false; // Nascosto all'inizio
+
+        // Toro/Ciambella (Immagine 2)
+        const torusGeo = new THREE.TorusGeometry(2, 0.8, 32, 100);
+        const torusPoints = createColoredPoints(torusGeo);
+        scene.add(torusPoints);
+        torusPoints.visible = false; // Nascosto all'inizio
+
+
+        // --- GESTIONE UI (Bottoni) ---
+        const btnSphere = document.getElementById('btn-sphere');
+        const btnCube = document.getElementById('btn-cube');
+        const btnTorus = document.getElementById('btn-torus');
+
+        function setActiveShape(shapeName) {
+            // Reset visibilità e stato bottoni
+            spherePoints.visible = false;
+            cubePoints.visible = false;
+            torusPoints.visible = false;
+            btnSphere.classList.remove('active');
+            btnCube.classList.remove('active');
+            btnTorus.classList.remove('active');
+
+            // Attiva quello scelto
+            if (shapeName === 'sphere') {
+                spherePoints.visible = true;
+                btnSphere.classList.add('active');
+            } else if (shapeName === 'cube') {
+                cubePoints.visible = true;
+                btnCube.classList.add('active');
+            } else if (shapeName === 'torus') {
+                torusPoints.visible = true;
+                btnTorus.classList.add('active');
+            }
+        }
+
+        btnSphere.addEventListener('click', () => setActiveShape('sphere'));
+        btnCube.addEventListener('click', () => setActiveShape('cube'));
+        btnTorus.addEventListener('click', () => setActiveShape('torus'));
+
+
+        // --- LOOP DI ANIMAZIONE ---
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // L'aggiornamento dei controlli gestisce sia l'interazione del mouse
+            // SIA l'auto-rotazione che abbiamo impostato.
+            controls.update();
+
+            renderer.render(scene, camera);
+        }
+
+        // Gestione ridimensionamento finestra
+        window.addEventListener('resize', onWindowResize, false);
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Avvia!
+        animate();
+    </script>
+</body>
+</html>
