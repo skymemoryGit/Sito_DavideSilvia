@@ -137,18 +137,15 @@
 
         #ui-buttons { 
             display: flex; 
-            /* Ridotto gap per far stare 4 bottoni su mobile */
-            gap: 15px; 
+            gap: 25px; 
             pointer-events: auto; 
-            flex-wrap: wrap; /* Per sicurezza su schermi piccolissimi */
-            justify-content: center;
         }
         
         button {
             background: transparent; border: none; color: rgba(255,255,255,0.5);
-            padding: 10px 8px; cursor: pointer;
-            font-family: 'Cinzel', serif; font-size: 0.8rem;
-            letter-spacing: 1px; text-transform: uppercase;
+            padding: 10px 10px; cursor: pointer;
+            font-family: 'Cinzel', serif; font-size: 0.85rem;
+            letter-spacing: 2px; text-transform: uppercase;
             position: relative; transition: color 0.4s ease;
         }
         button::after {
@@ -316,7 +313,7 @@
                 <div id="ui-buttons">
                     <button id="btn-sphere">Sfera</button>
                     <button id="btn-heart">Cuore</button>
-                    <button id="btn-text">D&amp;S</button> <button id="btn-torus" class="active">Anello</button>
+                    <button id="btn-torus" class="active">Anello</button>
                 </div>
                 <div class="zoom-container">
                     <span class="zoom-label">-</span>
@@ -358,8 +355,6 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-        import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
         import { gsap } from 'gsap';
 
         const loadingScreen = document.getElementById('loading-screen');
@@ -443,25 +438,17 @@
         const textureUrlMap = new Map();
         let loadedCount = 0;
         const textureLoader = new THREE.TextureLoader();
-        let loadedFont = null;
 
         function loadImagesAndStart() {
-            // Carica prima il font
-            const fontLoader = new FontLoader();
-            fontLoader.load('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_regular.typeface.json', (font) => {
-                loadedFont = font;
-                
-                // Poi carica le immagini
-                if (imagePaths.length === 0) { initScene(); return; }
-                imagePaths.forEach((path) => {
-                    textureLoader.load(path, (texture) => {
-                        texture.colorSpace = THREE.SRGBColorSpace;
-                        texture.minFilter = THREE.LinearFilter; 
-                        loadedTextures.push(texture);
-                        textureUrlMap.set(texture, path);
-                        updateCount();
-                    }, undefined, () => updateCount());
-                });
+            if (imagePaths.length === 0) { initScene(); return; }
+            imagePaths.forEach((path) => {
+                textureLoader.load(path, (texture) => {
+                    texture.colorSpace = THREE.SRGBColorSpace;
+                    texture.minFilter = THREE.LinearFilter; 
+                    loadedTextures.push(texture);
+                    textureUrlMap.set(texture, path);
+                    updateCount();
+                }, undefined, () => updateCount());
             });
         }
 
@@ -471,7 +458,7 @@
             const progressBar = document.getElementById('loader-progress');
             if(progressBar) progressBar.style.width = percent + "%";
             
-            if (loadedCount >= totalPhotos && loadedFont) {
+            if (loadedCount >= totalPhotos) {
                 setTimeout(() => {
                     loadingScreen.style.opacity = 0;
                     setTimeout(() => {
@@ -485,16 +472,7 @@
 
         function createSpriteGroup(geometry, spriteBaseSize, addJitter) {
             const group = new THREE.Group();
-            
-            // Assicuriamoci che la geometria abbia i vertici
-            let positions;
-            if (geometry.isBufferGeometry) {
-                positions = geometry.getAttribute('position').array;
-            } else {
-                // Fallback per geometrie complesse non bufferizzate subito (raro qui)
-                return group;
-            }
-
+            const positions = geometry.getAttribute('position').array;
             const vertexCount = positions.length / 3;
             if (loadedTextures.length === 0) return group;
 
@@ -517,6 +495,7 @@
                 
                 sprite.position.set(x,y,z);
                 
+                // SALVIAMO LA POSIZIONE ORIGINALE PER L'EFFETTO "IMPLOSIONE"
                 sprite.userData = { 
                     photoUrl: textureUrlMap.get(texture),
                     originalPos: new THREE.Vector3(x, y, z) 
@@ -544,10 +523,9 @@
             return geo;
         }
 
-        let sphereGroup, heartGroup, torusGroup, textGroup;
+        let sphereGroup, heartGroup, torusGroup;
         let currentGroup = null;
         let isModalOpen = false;
-        let isTransitioning = false; // Blocco i click durante l'animazione
 
         function positionGroupForMobile(group) {
             if(!group) return;
@@ -555,45 +533,20 @@
         }
 
         function initScene() {
-            // 1. Sfera
             sphereGroup = createSpriteGroup(new THREE.SphereGeometry(7, 30, 30), 0.9, true);
             positionGroupForMobile(sphereGroup);
             scene.add(sphereGroup);
             
-            // 2. Cuore
             heartGroup = createSpriteGroup(createHeartGeometry(targetPieces), 0.8, false);
             heartGroup.rotation.x = -Math.PI / 2; 
             positionGroupForMobile(heartGroup);
             scene.add(heartGroup);
             
-            // 3. Anello (Toro)
             torusGroup = createSpriteGroup(new THREE.TorusGeometry(6, 2.0, 20, 40), 0.9, false);
             positionGroupForMobile(torusGroup);
             scene.add(torusGroup);
 
-            // 4. Testo "D&S"
-            if (loadedFont) {
-                const textGeo = new TextGeometry('D & S', {
-                    font: loadedFont,
-                    size: 4.5,      // Dimensione testo
-                    height: 1.5,    // Spessore 3D
-                    curveSegments: 8,
-                    bevelEnabled: true,
-                    bevelThickness: 0.1,
-                    bevelSize: 0.1,
-                    bevelOffset: 0,
-                    bevelSegments: 3
-                });
-                textGeo.center(); // Centra la geometria
-                
-                // Creiamo il gruppo usando i vertici del testo
-                // Nota: TextGeometry genera molti triangoli, usiamo i vertici grezzi
-                textGroup = createSpriteGroup(textGeo, 0.7, true); 
-                positionGroupForMobile(textGroup);
-                scene.add(textGroup);
-            }
-
-            // Inizializza col Torus
+            // Inizializza col Torus tramite implosione (più scenografico)
             implodeGroup(torusGroup);
             currentGroup = torusGroup;
             
@@ -604,53 +557,58 @@
             resize();
         }
 
-        // --- ANIMAZIONE ESPLOSIONE (OUT) ---
+        // --- NUOVA ANIMAZIONE: ESPLOSIONE (OUT) ---
         function explodeGroup(group) {
             if (!group) return;
-            const expansionFactor = 40; 
+            const expansionFactor = 30; // Quanto lontano volano i pezzi
             group.children.forEach((s) => {
+                // Destinazione casuale esterna
                 const randomDir = new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize();
                 const targetPos = s.userData.originalPos.clone().add(randomDir.multiplyScalar(expansionFactor));
 
+                // Muovi fuori
                 gsap.to(s.position, {
                     x: targetPos.x, y: targetPos.y, z: targetPos.z,
-                    duration: 1.2,
+                    duration: 1.5,
                     ease: "power2.in"
                 });
-                
+                // Svanisci
                 gsap.to(s.material, {
                     opacity: 0,
-                    duration: 0.8,
-                    delay: 0.1, 
+                    duration: 1.0,
+                    delay: 0.2, // Inizia a svanire poco dopo il movimento
                     onComplete: () => { if(s === group.children[0]) group.visible = false; }
                 });
             });
         }
 
-        // --- ANIMAZIONE IMPLOSIONE (IN) ---
+        // --- NUOVA ANIMAZIONE: IMPLOSIONE (IN) ---
         function implodeGroup(group) {
             if (!group) return;
             group.visible = true;
-            const startRadius = 50; 
+            const startRadius = 35; 
             
             group.children.forEach((s, i) => {
+                // Setta posizione iniziale sparsa (caos)
                 const randomOffset = new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize().multiplyScalar(startRadius);
                 const startPos = s.userData.originalPos.clone().add(randomOffset);
                 s.position.copy(startPos);
                 s.material.opacity = 0;
 
+                // Anima verso la posizione originale (ordine)
                 gsap.to(s.position, {
                     x: s.userData.originalPos.x,
                     y: s.userData.originalPos.y,
                     z: s.userData.originalPos.z,
-                    duration: 2.2,
-                    ease: "power3.out",
-                    delay: Math.random() * 0.3 
+                    duration: 2.0,
+                    ease: "power3.out", // Rallenta alla fine per effetto "magnetico"
+                    delay: Math.random() * 0.5 // Leggero ritardo casuale per naturalezza
                 });
                 
+                // Appari
                 gsap.to(s.material, {
                     opacity: 1,
-                    duration: 1.5,
+                    duration: 1.8,
                     ease: "power2.out"
                 });
             });
@@ -658,7 +616,7 @@
 
         function setupAutoDynamics() {
             setInterval(() => {
-                if(!currentGroup || isModalOpen || isTransitioning) return;
+                if(!currentGroup || isModalOpen) return;
                 const randomBoost = Math.PI + (Math.random() * Math.PI);
                 const tiltX = (Math.random() - 0.5) * 0.5; 
                 const tiltZ = (Math.random() - 0.5) * 0.3;
@@ -675,36 +633,24 @@
             const btns = {
                 sphere: document.getElementById('btn-sphere'),
                 heart: document.getElementById('btn-heart'),
-                text: document.getElementById('btn-text'),
                 torus: document.getElementById('btn-torus')
             };
-
             function switchShape(name, group) {
-                if (currentGroup === group || isTransitioning) return;
+                if (currentGroup === group) return;
                 
-                isTransitioning = true; // Blocca altri click
-
-                // 1. ESPLODI
+                // ESPLODI IL GRUPPO CORRENTE
                 explodeGroup(currentGroup);
                 
                 Object.values(btns).forEach(b => b.classList.remove('active'));
+                
+                // IMPLODI IL NUOVO GRUPPO
+                implodeGroup(group);
+                
                 btns[name].classList.add('active');
-
-                // 2. ATTENDI CHE L'ESPLOSIONE SIA "PULITA"
-                setTimeout(() => {
-                    // 3. IMPLODI IL NUOVO
-                    implodeGroup(group);
-                    currentGroup = group;
-                    
-                    // Sblocca i click poco dopo che l'implosione è iniziata
-                    setTimeout(() => { isTransitioning = false; }, 1000);
-
-                }, 900); // 900ms di ritardo: lo schermo resta vuoto per un attimo
+                currentGroup = group;
             }
-
             btns.sphere.addEventListener('click', () => switchShape('sphere', sphereGroup));
             btns.heart.addEventListener('click', () => switchShape('heart', heartGroup));
-            btns.text.addEventListener('click', () => switchShape('text', textGroup));
             btns.torus.addEventListener('click', () => switchShape('torus', torusGroup));
         }
 
