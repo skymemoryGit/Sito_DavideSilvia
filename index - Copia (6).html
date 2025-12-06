@@ -25,17 +25,18 @@
             font-family: 'Montserrat', sans-serif;
             width: 100%;
             height: 100%;
-            overflow-x: hidden;
+            overflow-x: hidden; /* No scroll orizzontale */
         }
 
         body {
+            /* Rimosso flex column fisso per permettere scroll naturale */
             display: block; 
         }
 
         /* TEXTURE DI SFONDO */
         body::before {
             content: "";
-            position: fixed;
+            position: fixed; /* Fixed per non muoversi durante lo scroll */
             top: 0; left: 0; width: 100%; height: 100%;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
             pointer-events: none;
@@ -53,10 +54,11 @@
         .content-right {
             position: relative;
             width: 100%;
+            /* CHIAVE DEL LAYOUT: 92dvh occupa quasi tutto lo schermo mobile */
             height: 92dvh; 
             display: flex;
             flex-direction: column;
-            justify-content: flex-end; 
+            justify-content: flex-end; /* Spinge i controlli in basso */
             overflow: hidden;
             margin-bottom: 0;
         }
@@ -70,53 +72,8 @@
         canvas {
             display: block;
             outline: none;
+            /* Permette lo scroll verticale toccando il canvas */
             touch-action: pan-y !important; 
-        }
-
-        /* --- TITOLO IN ALTO (NUOVA POSIZIONE) --- */
-        .header-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%;
-            padding-top: 50px; /* Spazio dal bordo superiore */
-            padding-bottom: 40px;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            /* Sfumatura scura verso il basso per leggere il testo */
-            background: linear-gradient(to bottom, rgba(8,8,8,1) 0%, rgba(8,8,8,0.8) 40%, transparent 100%);
-            pointer-events: none; /* Lascia passare i click al 3D */
-        }
-
-        .title-group { 
-            text-align: center; 
-            position: relative; 
-            pointer-events: auto; /* Riattiva click per Easter Egg */
-        }
-
-        .title-group::before {
-            content: ""; display: block; width: 40px; height: 2px;
-            background: var(--gold); margin: 0 auto 15px auto;
-            opacity: 0.8;
-        }
-
-        h1 {
-            font-family: 'Cinzel', serif; font-size: 2.2rem; margin: 0; color: #fff;
-            font-weight: 400; letter-spacing: 2px; line-height: 1.2; text-transform: uppercase;
-            background: linear-gradient(to right, #ccc, var(--gold-light), #ccc);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-align: center;
-            text-shadow: 0 5px 15px rgba(0,0,0,0.5);
-        }
-        
-        #easter-trigger { cursor: help; transition: opacity 0.3s; }
-        #easter-trigger:hover { opacity: 0.7; }
-
-        p.subtitle {
-            font-size: 0.75rem; letter-spacing: 5px; text-transform: uppercase;
-            color: var(--gold); margin-top: 10px; font-weight: 500; text-align: center; opacity: 0.9;
-            text-shadow: 0 5px 15px rgba(0,0,0,0.8);
         }
 
         /* --- UI CONTROLS (DOCK IN BASSO) --- */
@@ -130,10 +87,11 @@
             flex-direction: column;
             align-items: center;
             gap: 15px;
-            padding-bottom: 40px; 
-            padding-top: 60px;
+            padding-bottom: 40px; /* Spazio per la 'home bar' di iPhone */
+            padding-top: 60px;    /* Sfumatura verso l'alto */
+            /* Gradiente forte per staccare i testi dallo sfondo 3D */
             background: linear-gradient(to top, rgba(8,8,8,1) 0%, rgba(8,8,8,0.8) 40%, transparent 100%);
-            pointer-events: none;
+            pointer-events: none; /* Lascia passare i click dove non ci sono bottoni */
         }
 
         #ui-buttons { 
@@ -189,18 +147,43 @@
             flex-direction: column;
             justify-content: flex-start;
             align-items: center;
-            padding: 40px 20px 80px 20px;
+            padding: 60px 20px 80px 20px;
             box-sizing: border-box;
             background: var(--bg-dark);
+            /* Bordo sfumato per separare visivamente */
             box-shadow: 0 -20px 50px rgba(0,0,0,1); 
             position: relative;
             z-index: 20; 
             min-height: 80vh;
         }
 
+        /* TYPOGRAPHY */
+        .title-group { text-align: center; margin-bottom: 50px; position: relative; }
+        .title-group::before {
+            content: ""; display: block; width: 40px; height: 2px;
+            background: var(--gold); margin: 0 auto 25px auto;
+            opacity: 0.6;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif; font-size: 2.4rem; margin: 0; color: #fff;
+            font-weight: 400; letter-spacing: 2px; line-height: 1.2; text-transform: uppercase;
+            background: linear-gradient(to right, #ccc, var(--gold-light), #ccc);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+        
+        #easter-trigger { cursor: help; transition: opacity 0.3s; }
+        #easter-trigger:hover { opacity: 0.7; }
+
+        p.subtitle {
+            font-size: 0.75rem; letter-spacing: 5px; text-transform: uppercase;
+            color: var(--gold); margin-top: 15px; font-weight: 500; text-align: center; opacity: 0.8;
+        }
+
         /* VIDEO FRAME */
         .video-container-luxury {
-            position: relative; width: 100%; max-width: 600px; padding: 10px; margin-bottom: 40px; margin-top: 20px;
+            position: relative; width: 100%; max-width: 600px; padding: 10px; margin-bottom: 40px;
         }
         .video-border-outer {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
@@ -275,10 +258,10 @@
         }
 
         @media (min-width: 901px) {
+            /* Se si apre da desktop, mantiene un layout decente ma il focus è mobile */
             .content-right { height: 100vh; position: fixed; top: 0; right: 0; width: 50%; }
             .content-left { width: 50%; margin-top: 100vh; margin-left: 0; min-height: 100vh; justify-content: center;}
             #main-content { display: flex; flex-direction: row; }
-            .header-overlay { width: 50%; left: auto; right: 0; }
         }
     </style>
 </head>
@@ -302,14 +285,6 @@
     <div id="main-content">
         
         <div class="content-right">
-            
-            <div class="header-overlay">
-                <div class="title-group">
-                    <h1>Davide <span id="easter-trigger" style="font-family:'Baskerville', serif; font-style:italic; color:var(--gold);">&amp;</span> Silvia</h1>
-                    <p class="subtitle">Eternal Moments</p>
-                </div>
-            </div>
-
             <div id="canvas-container"></div>
             
             <div id="ui-wrapper">
@@ -327,7 +302,11 @@
         </div>
 
         <div class="content-left">
-            
+            <div class="title-group">
+                <h1>Davide <span id="easter-trigger" style="font-family:'Baskerville', serif; font-style:italic; color:var(--gold);">&amp;</span> Silvia</h1>
+                <p class="subtitle">Eternal Moments</p>
+            </div>
+
             <div class="video-container-luxury">
                 <div class="video-border-outer"></div>
                 <div class="video-border-inner"></div>
@@ -373,11 +352,13 @@
         const canvasContainer = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         
+        // Rilevamento Mobile
         const isMobile = window.innerWidth < 900;
 
         const camera = new THREE.PerspectiveCamera(50, canvasContainer.offsetWidth / canvasContainer.offsetHeight, 0.1, 1000);
         
         const minZ = 0.5;  
+        // MODIFICA: Aumentato maxZ e initialZ per allontanare la camera su mobile
         const maxZ = isMobile ? 55 : 60;  
         const initialZ = isMobile ? 45 : 24; 
 
@@ -525,12 +506,12 @@
         let currentGroup = null;
         let isModalOpen = false;
 
+        // Funzione per centrare verticalmente l'oggetto in base alla viewport
         function positionGroupForMobile(group) {
             if(!group) return;
-            // SU MOBILE: Ora che abbiamo testo SOPRA e controlli SOTTO,
-            // la posizione migliore è il CENTRO esatto (0).
+            // SU MOBILE: Alziamo l'oggetto (y positiva) per non farlo coprire dai bottoni in basso
             if (isMobile) {
-                group.position.y = 0; 
+                group.position.y = 1.8; 
             } else {
                 group.position.y = 0;
             }
@@ -578,8 +559,10 @@
                 const tiltX = (Math.random() - 0.5) * 0.5; 
                 const tiltZ = (Math.random() - 0.5) * 0.3;
                 
+                // Rotazione casuale
                 gsap.to(currentGroup.rotation, { y: currentGroup.rotation.y + randomBoost, x: currentGroup.rotation.x + tiltX, z: tiltZ, duration: 3.5, ease: "power4.out" });
                 
+                // Ritorno alla posizione base (mantenendo la rotazione Heart corretta)
                 const baseRotX = (currentGroup === heartGroup ? -Math.PI/2 : 0);
                 gsap.to(currentGroup.rotation, { x: baseRotX, z: 0, delay: 3.0, duration: 2, ease: "power2.inOut" });
 
@@ -618,6 +601,7 @@
             modal.addEventListener('click', closeModal);
             renderer.domElement.addEventListener('dblclick', (event) => {
                 if (isModalOpen) return;
+                // Logica Raycasting...
                 const rect = renderer.domElement.getBoundingClientRect();
                 mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
                 mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
