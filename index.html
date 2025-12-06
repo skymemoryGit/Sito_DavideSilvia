@@ -137,10 +137,9 @@
 
         #ui-buttons { 
             display: flex; 
-            /* Ridotto gap per far stare 4 bottoni su mobile */
             gap: 15px; 
             pointer-events: auto; 
-            flex-wrap: wrap; /* Per sicurezza su schermi piccolissimi */
+            flex-wrap: wrap;
             justify-content: center;
         }
         
@@ -316,7 +315,7 @@
                 <div id="ui-buttons">
                     <button id="btn-sphere">Sfera</button>
                     <button id="btn-heart">Cuore</button>
-                    <button id="btn-text">D&amp;S</button> <button id="btn-torus" class="active">Anello</button>
+                    <button id="btn-infinity">Infinito</button> <button id="btn-torus" class="active">Anello</button>
                 </div>
                 <div class="zoom-container">
                     <span class="zoom-label">-</span>
@@ -358,8 +357,6 @@
     <script type="module">
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { FontLoader } from 'three/addons/loaders/FontLoader.js';
-        import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
         import { gsap } from 'gsap';
 
         const loadingScreen = document.getElementById('loading-screen');
@@ -443,25 +440,19 @@
         const textureUrlMap = new Map();
         let loadedCount = 0;
         const textureLoader = new THREE.TextureLoader();
-        let loadedFont = null;
+        
+        // Rimosso FontLoader
 
         function loadImagesAndStart() {
-            // Carica prima il font
-            const fontLoader = new FontLoader();
-            fontLoader.load('https://unpkg.com/three@0.160.0/examples/fonts/helvetiker_regular.typeface.json', (font) => {
-                loadedFont = font;
-                
-                // Poi carica le immagini
-                if (imagePaths.length === 0) { initScene(); return; }
-                imagePaths.forEach((path) => {
-                    textureLoader.load(path, (texture) => {
-                        texture.colorSpace = THREE.SRGBColorSpace;
-                        texture.minFilter = THREE.LinearFilter; 
-                        loadedTextures.push(texture);
-                        textureUrlMap.set(texture, path);
-                        updateCount();
-                    }, undefined, () => updateCount());
-                });
+            if (imagePaths.length === 0) { initScene(); return; }
+            imagePaths.forEach((path) => {
+                textureLoader.load(path, (texture) => {
+                    texture.colorSpace = THREE.SRGBColorSpace;
+                    texture.minFilter = THREE.LinearFilter; 
+                    loadedTextures.push(texture);
+                    textureUrlMap.set(texture, path);
+                    updateCount();
+                }, undefined, () => updateCount());
             });
         }
 
@@ -471,7 +462,7 @@
             const progressBar = document.getElementById('loader-progress');
             if(progressBar) progressBar.style.width = percent + "%";
             
-            if (loadedCount >= totalPhotos && loadedFont) {
+            if (loadedCount >= totalPhotos) {
                 setTimeout(() => {
                     loadingScreen.style.opacity = 0;
                     setTimeout(() => {
@@ -486,12 +477,10 @@
         function createSpriteGroup(geometry, spriteBaseSize, addJitter) {
             const group = new THREE.Group();
             
-            // Assicuriamoci che la geometria abbia i vertici
             let positions;
             if (geometry.isBufferGeometry) {
                 positions = geometry.getAttribute('position').array;
             } else {
-                // Fallback per geometrie complesse non bufferizzate subito (raro qui)
                 return group;
             }
 
@@ -544,10 +533,48 @@
             return geo;
         }
 
-        let sphereGroup, heartGroup, torusGroup, textGroup;
+        // --- NUOVA GEOMETRIA INFINITO (LEMNISCATA 3D) ---
+        function createInfinityGeometry(numPoints) {
+            const positions = [];
+            for (let i = 0; i < numPoints; i++) {
+                // Parametro che scorre lungo la curva
+                const t = (i / numPoints) * Math.PI * 2;
+                const a = 20; // Scala della figura
+                
+                // Formula Lemniscata di Bernoulli (base 2D)
+                // x = (a * cos(t)) / (1 + sin^2(t))
+                // y = (a * sin(t) * cos(t)) / (1 + sin^2(t))
+                let x = (a * Math.cos(t)) / (1 + Math.pow(Math.sin(t), 2));
+                let y = (a * Math.sin(t) * Math.cos(t)) / (1 + Math.pow(Math.sin(t), 2));
+                let z = 0;
+
+                // Aggiungiamo spessore (Volume)
+                // Generiamo un punto casuale attorno alla linea centrale
+                const thickness = 3.5; 
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.random() * Math.PI;
+                const r = Math.random() * thickness;
+                
+                // Aggiungi rumore sferico per creare il tubo
+                x += r * Math.sin(phi) * Math.cos(theta);
+                y += r * Math.sin(phi) * Math.sin(theta);
+                z += r * Math.cos(phi);
+
+                // Tocco finale: curviamo leggermente la Z per dargli profondità (non piatta)
+                z += Math.sin(t * 2) * 5; 
+
+                // Scaliamo un po' tutto per adattarlo alla scena
+                positions.push(x * 0.8, y * 0.8, z * 0.8);
+            }
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            return geo;
+        }
+
+        let sphereGroup, heartGroup, torusGroup, infinityGroup;
         let currentGroup = null;
         let isModalOpen = false;
-        let isTransitioning = false; // Blocco i click durante l'animazione
+        let isTransitioning = false;
 
         function positionGroupForMobile(group) {
             if(!group) return;
@@ -571,27 +598,10 @@
             positionGroupForMobile(torusGroup);
             scene.add(torusGroup);
 
-            // 4. Testo "D&S"
-            if (loadedFont) {
-                const textGeo = new TextGeometry('D & S', {
-                    font: loadedFont,
-                    size: 4.5,      // Dimensione testo
-                    height: 1.5,    // Spessore 3D
-                    curveSegments: 8,
-                    bevelEnabled: true,
-                    bevelThickness: 0.1,
-                    bevelSize: 0.1,
-                    bevelOffset: 0,
-                    bevelSegments: 3
-                });
-                textGeo.center(); // Centra la geometria
-                
-                // Creiamo il gruppo usando i vertici del testo
-                // Nota: TextGeometry genera molti triangoli, usiamo i vertici grezzi
-                textGroup = createSpriteGroup(textGeo, 0.7, true); 
-                positionGroupForMobile(textGroup);
-                scene.add(textGroup);
-            }
+            // 4. INFINITO (Nuovo)
+            infinityGroup = createSpriteGroup(createInfinityGeometry(targetPieces), 0.8, true);
+            positionGroupForMobile(infinityGroup);
+            scene.add(infinityGroup);
 
             // Inizializza col Torus
             implodeGroup(torusGroup);
@@ -675,14 +685,14 @@
             const btns = {
                 sphere: document.getElementById('btn-sphere'),
                 heart: document.getElementById('btn-heart'),
-                text: document.getElementById('btn-text'),
+                infinity: document.getElementById('btn-infinity'),
                 torus: document.getElementById('btn-torus')
             };
 
             function switchShape(name, group) {
                 if (currentGroup === group || isTransitioning) return;
                 
-                isTransitioning = true; // Blocca altri click
+                isTransitioning = true; 
 
                 // 1. ESPLODI
                 explodeGroup(currentGroup);
@@ -690,21 +700,20 @@
                 Object.values(btns).forEach(b => b.classList.remove('active'));
                 btns[name].classList.add('active');
 
-                // 2. ATTENDI CHE L'ESPLOSIONE SIA "PULITA"
+                // 2. ATTENDI
                 setTimeout(() => {
-                    // 3. IMPLODI IL NUOVO
+                    // 3. IMPLODI
                     implodeGroup(group);
                     currentGroup = group;
                     
-                    // Sblocca i click poco dopo che l'implosione è iniziata
                     setTimeout(() => { isTransitioning = false; }, 1000);
 
-                }, 900); // 900ms di ritardo: lo schermo resta vuoto per un attimo
+                }, 900); 
             }
 
             btns.sphere.addEventListener('click', () => switchShape('sphere', sphereGroup));
             btns.heart.addEventListener('click', () => switchShape('heart', heartGroup));
-            btns.text.addEventListener('click', () => switchShape('text', textGroup));
+            btns.infinity.addEventListener('click', () => switchShape('infinity', infinityGroup));
             btns.torus.addEventListener('click', () => switchShape('torus', torusGroup));
         }
 
