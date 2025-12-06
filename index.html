@@ -12,7 +12,7 @@
     <style>
         :root {
             --gold: #D4AF37;            
-            --gold-light: #F3E5AB;      
+            --gold-light: #F3E5AB;       
             --bg-dark: #080808;         
             --text-grey: #888888;
         }
@@ -24,149 +24,97 @@
             color: white;
             font-family: 'Montserrat', sans-serif;
             width: 100%;
-            height: 100vh; 
-            overflow: hidden; /* Desktop: no scroll */
+            height: 100%;
+            overflow-x: hidden; /* No scroll orizzontale */
         }
 
         body {
-            display: flex;
-            flex-direction: column;
+            /* Rimosso flex column fisso per permettere scroll naturale */
+            display: block; 
         }
 
         /* TEXTURE DI SFONDO */
         body::before {
             content: "";
-            position: absolute;
+            position: fixed; /* Fixed per non muoversi durante lo scroll */
             top: 0; left: 0; width: 100%; height: 100%;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
             pointer-events: none;
             z-index: 0;
             opacity: 0.4;
-            background-attachment: fixed;
         }
 
         #main-content {
-            flex: 1;
-            display: flex;
             width: 100%;
-            height: 100%;
             position: relative;
             z-index: 1;
         }
 
-        /* COLONNA SX (Testo/Video - Desktop) */
-        .content-left {
-            flex: 0 0 40%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 60px;
-            box-sizing: border-box;
-            background: radial-gradient(circle at top left, rgba(30,30,30,0.4), transparent 70%);
-            border-right: 1px solid rgba(212, 175, 55, 0.1);
-            pointer-events: auto; 
-        }
-
-        /* COLONNA DX (3D - Desktop) */
+        /* --- SEZIONE 3D (HERO PAGE) --- */
         .content-right {
-            flex: 1;
             position: relative;
-            overflow: hidden;
+            width: 100%;
+            /* CHIAVE DEL LAYOUT: 92dvh occupa quasi tutto lo schermo mobile */
+            height: 92dvh; 
             display: flex;
             flex-direction: column;
+            justify-content: flex-end; /* Spinge i controlli in basso */
+            overflow: hidden;
+            margin-bottom: 0;
         }
         
-        /* Contenitore Canvas per gestire l'altezza */
         #canvas-container {
-            flex: 1;
-            width: 100%;
-            position: relative;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
         }
 
         canvas {
             display: block;
-            width: 100% !important;
-            height: 100% !important;
             outline: none;
-            touch-action: none; 
+            /* Permette lo scroll verticale toccando il canvas */
+            touch-action: pan-y !important; 
         }
 
-        /* TYPOGRAPHY */
-        .title-group { text-align: center; margin-bottom: 50px; position: relative; }
-        .title-group::before {
-            content: ""; display: block; width: 60px; height: 1px;
-            background: var(--gold); margin: 0 auto 20px auto;
-        }
-
-        h1 {
-            font-family: 'Cinzel', serif; font-size: 3.5rem; margin: 0; color: #fff;
-            font-weight: 400; letter-spacing: 2px; line-height: 1.2; text-transform: uppercase;
-            background: linear-gradient(to right, #fff, var(--gold-light), #fff);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        
-        #easter-trigger { cursor: help; transition: opacity 0.3s; }
-        #easter-trigger:hover { opacity: 0.7; }
-
-        p.subtitle {
-            font-size: 0.8rem; letter-spacing: 6px; text-transform: uppercase;
-            color: var(--gold); margin-top: 15px; font-weight: 500;
-        }
-
-        /* VIDEO FRAME */
-        .video-container-luxury {
-            position: relative; width: 100%; max-width: 500px; padding: 15px; margin-bottom: 40px;
-        }
-        .video-border-outer {
-            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            border: 1px solid rgba(212, 175, 55, 0.3); pointer-events: none;
-        }
-        .video-border-inner {
-            position: absolute; top: 6px; left: 6px; right: 6px; bottom: 6px;
-            border: 1px solid rgba(212, 175, 55, 0.6); pointer-events: none;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
-        }
-        .video-wrapper {
-            position: relative; padding-bottom: 56.25%; height: 0;
-            background: #000; z-index: 2;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-        }
-        .video-wrapper iframe {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        }
-
-        /* UI CONTROLS - DEFAULT DESKTOP (Position Absolute) */
+        /* --- UI CONTROLS (DOCK IN BASSO) --- */
         #ui-wrapper {
             position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
+            bottom: 0;
+            left: 0;
+            z-index: 10;
+            width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 15px;
-            width: 100%;
-            pointer-events: none;
+            padding-bottom: 40px; /* Spazio per la 'home bar' di iPhone */
+            padding-top: 60px;    /* Sfumatura verso l'alto */
+            /* Gradiente forte per staccare i testi dallo sfondo 3D */
+            background: linear-gradient(to top, rgba(8,8,8,1) 0%, rgba(8,8,8,0.8) 40%, transparent 100%);
+            pointer-events: none; /* Lascia passare i click dove non ci sono bottoni */
         }
-        #ui-buttons { display: flex; gap: 30px; pointer-events: auto; }
+
+        #ui-buttons { 
+            display: flex; 
+            gap: 25px; 
+            pointer-events: auto; 
+        }
         
         button {
-            background: transparent; border: none; color: rgba(255,255,255,0.4);
-            padding: 10px 0; cursor: pointer;
-            font-family: 'Cinzel', serif; font-size: 0.9rem;
+            background: transparent; border: none; color: rgba(255,255,255,0.5);
+            padding: 10px 10px; cursor: pointer;
+            font-family: 'Cinzel', serif; font-size: 0.85rem;
             letter-spacing: 2px; text-transform: uppercase;
             position: relative; transition: color 0.4s ease;
         }
         button::after {
-            content: ''; position: absolute; bottom: 0; left: 50%;
+            content: ''; position: absolute; bottom: 5px; left: 50%;
             width: 0; height: 1px; background: var(--gold);
             transition: all 0.4s ease; transform: translateX(-50%);
         }
         button:hover { color: white; }
-        button.active { color: var(--gold); }
-        button.active::after { width: 100%; }
+        button.active { color: var(--gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+        button.active::after { width: 80%; }
 
         /* ZOOM SLIDER */
         .zoom-container {
@@ -178,36 +126,97 @@
             font-family: 'Montserrat', sans-serif; font-size: 0.7rem; 
             color: rgba(255,255,255,0.4); text-transform: uppercase; width: 20px; text-align: center;
         }
-        input[type=range] { -webkit-appearance: none; width: 150px; background: transparent; }
+        input[type=range] { -webkit-appearance: none; width: 140px; background: transparent; }
         input[type=range]:focus { outline: none; }
         input[type=range]::-webkit-slider-thumb {
             -webkit-appearance: none; height: 12px; width: 12px;
             border-radius: 50%; background: var(--gold); cursor: pointer; margin-top: -5px;
-            box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
         }
         input[type=range]::-webkit-slider-runnable-track {
             width: 100%; height: 2px; cursor: pointer;
-            background: rgba(255,255,255,0.1); border-radius: 1px;
+            background: rgba(255,255,255,0.15); border-radius: 1px;
         }
 
         @keyframes fadeIn { to { opacity: 1; } }
+
+        /* --- SEZIONE TESTO E VIDEO (SOTTO IL FOLD) --- */
+        .content-left {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            padding: 60px 20px 80px 20px;
+            box-sizing: border-box;
+            background: var(--bg-dark);
+            /* Bordo sfumato per separare visivamente */
+            box-shadow: 0 -20px 50px rgba(0,0,0,1); 
+            position: relative;
+            z-index: 20; 
+            min-height: 80vh;
+        }
+
+        /* TYPOGRAPHY */
+        .title-group { text-align: center; margin-bottom: 50px; position: relative; }
+        .title-group::before {
+            content: ""; display: block; width: 40px; height: 2px;
+            background: var(--gold); margin: 0 auto 25px auto;
+            opacity: 0.6;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif; font-size: 2.4rem; margin: 0; color: #fff;
+            font-weight: 400; letter-spacing: 2px; line-height: 1.2; text-transform: uppercase;
+            background: linear-gradient(to right, #ccc, var(--gold-light), #ccc);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-align: center;
+        }
+        
+        #easter-trigger { cursor: help; transition: opacity 0.3s; }
+        #easter-trigger:hover { opacity: 0.7; }
+
+        p.subtitle {
+            font-size: 0.75rem; letter-spacing: 5px; text-transform: uppercase;
+            color: var(--gold); margin-top: 15px; font-weight: 500; text-align: center; opacity: 0.8;
+        }
+
+        /* VIDEO FRAME */
+        .video-container-luxury {
+            position: relative; width: 100%; max-width: 600px; padding: 10px; margin-bottom: 40px;
+        }
+        .video-border-outer {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            border: 1px solid rgba(212, 175, 55, 0.3); pointer-events: none;
+        }
+        .video-border-inner {
+            position: absolute; top: 4px; left: 4px; right: 4px; bottom: 4px;
+            border: 1px solid rgba(212, 175, 55, 0.5); pointer-events: none;
+        }
+        .video-wrapper {
+            position: relative; padding-bottom: 56.25%; height: 0;
+            background: #000; z-index: 2;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+        .video-wrapper iframe {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        }
 
         /* LOADING & MODAL */
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-dark); z-index: 9999;
-            display: flex; 
-            flex-direction: column; align-items: center; justify-content: center;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 1.2s ease;
         }
         .loading-logo {
-            font-family: 'Cinzel', serif; font-size: 4rem; color: var(--gold);
+            font-family: 'Cinzel', serif; font-size: 3rem; color: var(--gold);
             margin-bottom: 20px; letter-spacing: 5px; animation: pulse 3s infinite;
         }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
         .loader-line {
-            width: 150px; height: 1px; background: #222; margin-top: 20px; position: relative; overflow: hidden;
+            width: 120px; height: 1px; background: #222; margin-top: 20px; position: relative; overflow: hidden;
         }
         .loader-fill {
             position: absolute; left: 0; top: 0; height: 100%; width: 0%;
@@ -222,8 +231,8 @@
             align-items: center; justify-content: center; cursor: zoom-out;
         }
         #modal-image {
-            max-width: 80%; max-height: 80%;
-            box-shadow: 0 0 100px rgba(0,0,0,1);
+            max-width: 90%; max-height: 80%;
+            box-shadow: 0 0 50px rgba(0,0,0,1);
             border: 1px solid rgba(50,50,50,1);
             transform: scale(0.95); opacity: 0;
             transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -231,81 +240,28 @@
         #modal-image.open { transform: scale(1); opacity: 1; }
 
         #easter-toast {
-            position: fixed; bottom: 40px; left: 40px;
-            background: rgba(20,20,20,0.9); border-left: 3px solid var(--gold);
-            color: #fff; padding: 15px 30px;
-            font-family: 'Montserrat', sans-serif; font-size: 0.9rem;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            transform: translateY(100px); opacity: 0;
+            position: fixed; bottom: 40px; left: 20px; right: 20px;
+            background: rgba(20,20,20,0.95); border-left: 2px solid var(--gold);
+            color: #fff; padding: 15px; text-align: center;
+            font-family: 'Montserrat', sans-serif; font-size: 0.85rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            transform: translateY(150px); opacity: 0;
             transition: all 0.6s cubic-bezier(0.19, 1, 0.22, 1);
             z-index: 6000; pointer-events: none;
         }
         #easter-toast.show { transform: translateY(0); opacity: 1; }
 
         footer {
-            position: absolute; bottom: 10px; left: 60px;
-            color: rgba(255,255,255,0.2); font-size: 0.7rem; letter-spacing: 1px; z-index: 10;
+            margin-top: 30px;
+            color: rgba(255,255,255,0.15); font-size: 0.6rem; letter-spacing: 2px;
+            text-align: center; width: 100%; text-transform: uppercase;
         }
 
-        /* --- MOBILE OPTIMIZATION --- */
-        @media (max-width: 900px) {
-            html, body {
-                height: auto;
-                min-height: 100%;
-                overflow-y: auto !important;
-                -webkit-overflow-scrolling: touch;
-            }
-
-            #main-content { 
-                /* Rimuoviamo column-reverse e usiamo flex-direction: column normale */
-                flex-direction: column;
-                height: auto; 
-                display: flex;
-            }
-
-            /* PRIMO ELEMENTO: Sezione 3D + Controlli */
-            .content-right { 
-                order: 1; /* Forza questa sezione per prima */
-                width: 100%;
-                display: block;
-                position: relative;
-                height: auto; /* Altezza automatica per contenere canvas e controlli */
-            }
-
-            /* Canvas: occupa il 60% dell'altezza dello schermo */
-            #canvas-container {
-                height: 60vh;
-            }
-
-            canvas { touch-action: pan-y !important; }
-
-            /* Controlli UI: NON PIÙ ASSOLUTI SU MOBILE */
-            #ui-wrapper {
-                position: relative; /* Relativo al flusso */
-                bottom: auto; left: auto; transform: none;
-                padding: 20px 0; /* Spazio sopra e sotto */
-                background: var(--bg-dark); /* Sfondo per staccare visivamente */
-                z-index: 20;
-            }
-
-            /* SECONDO ELEMENTO: Testo e Video */
-            .content-left { 
-                order: 2; /* Forza questa sezione per seconda */
-                width: 100%;
-                /* Padding ridotto sopra perché ora c'è spazio fisico */
-                padding: 40px 20px 80px 20px; 
-                border-right: none; 
-                border-top: 1px solid rgba(212, 175, 55, 0.1); 
-                z-index: 10; 
-                background: var(--bg-dark);
-                position: relative;
-            }
-
-            h1 { font-size: 2.2rem; }
-            
-            footer { 
-                position: relative; bottom: auto; margin-top: 20px; left: 0; transform: none; width: 100%; text-align: center; 
-            }
+        @media (min-width: 901px) {
+            /* Se si apre da desktop, mantiene un layout decente ma il focus è mobile */
+            .content-right { height: 100vh; position: fixed; top: 0; right: 0; width: 50%; }
+            .content-left { width: 50%; margin-top: 100vh; margin-left: 0; min-height: 100vh; justify-content: center;}
+            #main-content { display: flex; flex-direction: row; }
         }
     </style>
 </head>
@@ -313,7 +269,7 @@
 
     <div id="loading-screen">
         <div class="loading-logo">D&S</div>
-        <div style="color: #666; font-size: 0.7rem; letter-spacing: 3px; text-transform: uppercase;">Caricamento Collezione</div>
+        <div style="color: #666; font-size: 0.6rem; letter-spacing: 3px; text-transform: uppercase;">Loading Collection</div>
         <div class="loader-line"><div id="loader-progress" class="loader-fill"></div></div>
     </div>
 
@@ -322,11 +278,29 @@
     </div>
 
     <div id="easter-toast">
-        <span style="color:var(--gold); font-size:1.2rem; margin-right:10px;">✦</span> 
+        <span style="color:var(--gold); font-size:1.1rem; margin-right:5px;">✦</span> 
         "Tanto il vestito di Davide è gratis"
     </div>
 
     <div id="main-content">
+        
+        <div class="content-right">
+            <div id="canvas-container"></div>
+            
+            <div id="ui-wrapper">
+                <div id="ui-buttons">
+                    <button id="btn-sphere">Sfera</button>
+                    <button id="btn-heart">Cuore</button>
+                    <button id="btn-torus" class="active">Anello</button>
+                </div>
+                <div class="zoom-container">
+                    <span class="zoom-label">-</span>
+                    <input type="range" id="zoom-slider" min="0" max="100" value="50" step="1">
+                    <span class="zoom-label">+</span>
+                </div>
+            </div>
+        </div>
+
         <div class="content-left">
             <div class="title-group">
                 <h1>Davide <span id="easter-trigger" style="font-family:'Baskerville', serif; font-style:italic; color:var(--gold);">&amp;</span> Silvia</h1>
@@ -350,25 +324,6 @@
             <footer>Est. 2024 &bull; Private Collection</footer>
         </div>
 
-        <div class="content-right">
-            
-            <div id="canvas-container"></div>
-            
-            <div id="ui-wrapper">
-                <div id="ui-buttons">
-                    <button id="btn-sphere">Sfera</button>
-                    <button id="btn-heart">Cuore</button>
-                    <button id="btn-torus" class="active">Anello</button>
-                </div>
-                
-                <div class="zoom-container">
-                    <span class="zoom-label">-</span>
-                    <input type="range" id="zoom-slider" min="0" max="100" value="50" step="1">
-                    <span class="zoom-label">+</span>
-                </div>
-            </div>
-
-        </div>
     </div>
 
     <script type="importmap">
@@ -388,37 +343,34 @@
 
         const loadingScreen = document.getElementById('loading-screen');
 
-        // --- THREE JS LOGIC ---
-
         const totalPhotos = 25;  
         const targetPieces = 800; 
         
         const repeats = Math.ceil(targetPieces / totalPhotos);
         const imagePaths = Array.from({length: totalPhotos}, (_, i) => `./foto/${i + 1}.jpg`);
 
-        // MODIFICA: Il renderer ora viene appeso al nuovo contenitore
         const canvasContainer = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
         
+        // Rilevamento Mobile
         const isMobile = window.innerWidth < 900;
 
-        // MODIFICA: Uso le dimensioni del contenitore canvas, non di content-right
         const camera = new THREE.PerspectiveCamera(50, canvasContainer.offsetWidth / canvasContainer.offsetHeight, 0.1, 1000);
         
         const minZ = 0.5;  
-        const maxZ = isMobile ? 50 : 60;  
-        const initialZ = isMobile ? 22 : 28; 
+        // MODIFICA: Aumentato maxZ e initialZ per allontanare la camera su mobile
+        const maxZ = isMobile ? 55 : 60;  
+        const initialZ = isMobile ? 45 : 24; 
 
         camera.position.z = initialZ; 
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        // MODIFICA: Append al nuovo container
         canvasContainer.appendChild(renderer.domElement);
         
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true; controls.dampingFactor = 0.03;
-        controls.autoRotate = true; controls.autoRotateSpeed = 0.4;
+        controls.autoRotate = true; controls.autoRotateSpeed = 0.6;
         controls.enablePan = false;
         
         controls.enableZoom = true; 
@@ -460,7 +412,6 @@
         const mouse = new THREE.Vector2();
 
         function resize() {
-            // MODIFICA: Uso le dimensioni del contenitore canvas
             const w = canvasContainer.offsetWidth;
             const h = canvasContainer.offsetHeight;
             camera.aspect = w / h;
@@ -498,7 +449,6 @@
                     loadingScreen.style.opacity = 0;
                     setTimeout(() => {
                         loadingScreen.style.display = 'none';
-                        // Resize immediato per evitare glitch
                         resize();
                     }, 1200);
                     initScene();
@@ -556,15 +506,29 @@
         let currentGroup = null;
         let isModalOpen = false;
 
+        // Funzione per centrare verticalmente l'oggetto in base alla viewport
+        function positionGroupForMobile(group) {
+            if(!group) return;
+            // SU MOBILE: Alziamo l'oggetto (y positiva) per non farlo coprire dai bottoni in basso
+            if (isMobile) {
+                group.position.y = 1.8; 
+            } else {
+                group.position.y = 0;
+            }
+        }
+
         function initScene() {
             sphereGroup = createSpriteGroup(new THREE.SphereGeometry(7, 30, 30), 0.9, true);
+            positionGroupForMobile(sphereGroup);
             scene.add(sphereGroup);
             
             heartGroup = createSpriteGroup(createHeartGeometry(targetPieces), 0.8, false);
             heartGroup.rotation.x = -Math.PI / 2; 
+            positionGroupForMobile(heartGroup);
             scene.add(heartGroup);
             
             torusGroup = createSpriteGroup(new THREE.TorusGeometry(6, 2.0, 20, 40), 0.9, false);
+            positionGroupForMobile(torusGroup);
             scene.add(torusGroup);
 
             fadeGroup(torusGroup, 1);
@@ -574,7 +538,6 @@
             setupInteraction();
             setupAutoDynamics();
             animate();
-            // Resize finale dopo setup
             resize();
         }
 
@@ -595,8 +558,14 @@
                 const randomBoost = Math.PI + (Math.random() * Math.PI);
                 const tiltX = (Math.random() - 0.5) * 0.5; 
                 const tiltZ = (Math.random() - 0.5) * 0.3;
+                
+                // Rotazione casuale
                 gsap.to(currentGroup.rotation, { y: currentGroup.rotation.y + randomBoost, x: currentGroup.rotation.x + tiltX, z: tiltZ, duration: 3.5, ease: "power4.out" });
-                gsap.to(currentGroup.rotation, { x: (currentGroup === heartGroup ? -Math.PI/2 : 0), z: 0, delay: 3.0, duration: 2, ease: "power2.inOut" });
+                
+                // Ritorno alla posizione base (mantenendo la rotazione Heart corretta)
+                const baseRotX = (currentGroup === heartGroup ? -Math.PI/2 : 0);
+                gsap.to(currentGroup.rotation, { x: baseRotX, z: 0, delay: 3.0, duration: 2, ease: "power2.inOut" });
+
             }, 8000);
         }
 
@@ -632,6 +601,7 @@
             modal.addEventListener('click', closeModal);
             renderer.domElement.addEventListener('dblclick', (event) => {
                 if (isModalOpen) return;
+                // Logica Raycasting...
                 const rect = renderer.domElement.getBoundingClientRect();
                 mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
                 mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -673,7 +643,6 @@
             renderer.render(scene, camera);
         }
 
-        // Avvio diretto del caricamento
         loadImagesAndStart();
     </script>
 </body>
