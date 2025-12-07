@@ -12,199 +12,155 @@
     <style>
         :root {
             --gold: #D4AF37;            
-            --gold-light: #F3E5AB;      
+            --gold-light: #F3E5AB;       
             --bg-dark: #080808;         
             --text-grey: #888888;
-            --error-red: #8a2be2; 
         }
 
         html, body {
-            margin: 0;
-            padding: 0;
-            background-color: var(--bg-dark);
-            color: white;
+            margin: 0; padding: 0;
+            background-color: var(--bg-dark); color: white;
             font-family: 'Montserrat', sans-serif;
-            width: 100%;
-            height: 100%;
-            overflow-x: hidden;
+            width: 100%; height: 100%; overflow-x: hidden;
         }
 
-        body {
-            display: block; 
-        }
+        body { display: block; }
 
-        /* TEXTURE DI SFONDO */
+        /* TEXTURE SFONDO */
         body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
-            pointer-events: none;
-            z-index: 0;
-            opacity: 0.4;
+            pointer-events: none; z-index: 0; opacity: 0.4;
         }
 
-        /* --- LOGIN SCREEN (PROTEZIONE) --- */
+        /* --- LOGIN SCREEN --- */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-dark); z-index: 20000; /* Sopra a tutto */
+            background: var(--bg-dark); z-index: 10000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 1s ease, visibility 1s;
         }
-        .login-content { text-align: center; max-width: 300px; width: 80%; }
-        .login-logo {
+        .login-box {
+            text-align: center; width: 80%; max-width: 300px;
+        }
+        .login-title {
+            font-family: 'Cinzel', serif; font-size: 1.5rem; color: var(--gold); margin-bottom: 30px;
+        }
+        input[type="password"] {
+            background: rgba(255,255,255,0.05); border: 1px solid var(--gold);
+            color: white; padding: 10px; width: 100%; text-align: center;
+            font-family: 'Montserrat', sans-serif; letter-spacing: 2px;
+            margin-bottom: 20px; outline: none; transition: all 0.3s;
+        }
+        input[type="password"]:focus { background: rgba(255,255,255,0.1); }
+        .btn-enter {
+            background: var(--gold); color: #000; border: none;
+            padding: 10px 30px; font-family: 'Cinzel', serif; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 1px; transition: 0.3s;
+        }
+        .btn-enter:hover { background: var(--gold-light); }
+        .error-msg {
+            color: #ff4444; font-size: 0.8rem; margin-top: 15px; opacity: 0; transition: 0.3s;
+        }
+
+        /* --- LOADING SCREEN (originale, ora z-index più basso del login ma più alto del content) --- */
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-dark); z-index: 9000;
+            display: none; /* Nascondiamo di default, mostriamo dopo login */
+            flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 1.2s ease;
+        }
+        .loading-logo {
             font-family: 'Cinzel', serif; font-size: 3rem; color: var(--gold);
-            margin-bottom: 40px; letter-spacing: 5px;
+            margin-bottom: 20px; letter-spacing: 5px; animation: pulse 3s infinite;
         }
-        .login-input {
-            width: 100%; background: transparent; border: none;
-            border-bottom: 1px solid rgba(255,255,255,0.3);
-            color: white; font-family: 'Montserrat', sans-serif; font-size: 1.2rem;
-            text-align: center; padding: 10px; letter-spacing: 3px;
-            outline: none; transition: border-color 0.3s;
-            margin-bottom: 30px;
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .loader-line {
+            width: 120px; height: 1px; background: #222; margin-top: 20px; position: relative; overflow: hidden;
         }
-        .login-input:focus { border-bottom-color: var(--gold); }
-        .login-btn {
-            background: rgba(212, 175, 55, 0.1); border: 1px solid var(--gold);
-            color: var(--gold); padding: 12px 30px; font-family: 'Cinzel', serif;
-            font-size: 0.9rem; letter-spacing: 2px; cursor: pointer;
-            transition: all 0.3s; text-transform: uppercase;
-        }
-        .login-btn:hover { background: var(--gold); color: #000; }
-        .error-shake { animation: shake 0.5s; border-bottom-color: #ff4444 !important; }
-        @keyframes shake {
-            0% { transform: translateX(0); } 25% { transform: translateX(-10px); }
-            50% { transform: translateX(10px); } 75% { transform: translateX(-10px); } 100% { transform: translateX(0); }
+        .loader-fill {
+            position: absolute; left: 0; top: 0; height: 100%; width: 0%;
+            background: var(--gold); transition: width 0.3s;
         }
 
+        /* --- CONTENUTO PRINCIPALE --- */
         #main-content {
-            width: 100%;
-            position: relative;
-            z-index: 1;
-            opacity: 0; /* Nascosto inizialmente */
-            transition: opacity 1.5s ease;
+            width: 100%; position: relative; z-index: 1; display: none; /* Nascosto fino al login */
         }
 
-        /* --- SEZIONE 3D (HERO PAGE) --- */
         .content-right {
-            position: relative;
-            width: 100%;
-            height: 92dvh; 
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end; 
-            overflow: hidden;
-            margin-bottom: 0;
+            position: relative; width: 100%; height: 92dvh; 
+            display: flex; flex-direction: column; justify-content: flex-end; 
+            overflow: hidden; margin-bottom: 0;
         }
         
         #canvas-container {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1;
         }
+        canvas { display: block; outline: none; touch-action: pan-y !important; }
 
-        canvas {
-            display: block;
-            outline: none;
-            touch-action: pan-y !important; 
-        }
-
-        /* --- TITOLO IN ALTO --- */
         .header-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%;
-            padding-top: 50px; 
-            padding-bottom: 40px;
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
+            position: absolute; top: 0; left: 0; width: 100%;
+            padding-top: 50px; padding-bottom: 40px; z-index: 10;
+            display: flex; flex-direction: column; align-items: center;
             background: linear-gradient(to bottom, rgba(8,8,8,1) 0%, rgba(8,8,8,0.8) 40%, transparent 100%);
             pointer-events: none;
         }
 
-        .title-group { 
-            text-align: center; 
-            position: relative; 
-            pointer-events: auto;
-        }
-
+        .title-group { text-align: center; position: relative; pointer-events: auto; }
         .title-group::before {
             content: ""; display: block; width: 40px; height: 2px;
-            background: var(--gold); margin: 0 auto 15px auto;
-            opacity: 0.8;
+            background: var(--gold); margin: 0 auto 15px auto; opacity: 0.8;
         }
-
         h1 {
             font-family: 'Cinzel', serif; font-size: 2.2rem; margin: 0; color: #fff;
             font-weight: 400; letter-spacing: 2px; line-height: 1.2; text-transform: uppercase;
             background: linear-gradient(to right, #ccc, var(--gold-light), #ccc);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            text-align: center;
-            text-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            text-shadow: 0 5px 15px rgba(0,0,0,0.5); text-align: center;
         }
         
         #easter-trigger { cursor: help; transition: opacity 0.3s; }
         #easter-trigger:hover { opacity: 0.7; }
-
         p.subtitle {
             font-size: 0.75rem; letter-spacing: 5px; text-transform: uppercase;
             color: var(--gold); margin-top: 10px; font-weight: 500; text-align: center; opacity: 0.9;
             text-shadow: 0 5px 15px rgba(0,0,0,0.8);
         }
 
-        /* --- UI CONTROLS (DOCK IN BASSO) --- */
+        /* UI CONTROLS */
         #ui-wrapper {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            z-index: 10;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-            padding-bottom: 40px; 
-            padding-top: 60px;
+            position: absolute; bottom: 0; left: 0; z-index: 10; width: 100%;
+            display: flex; flex-direction: column; align-items: center; gap: 15px;
+            padding-bottom: 40px; padding-top: 60px;
             background: linear-gradient(to top, rgba(8,8,8,1) 0%, rgba(8,8,8,0.8) 40%, transparent 100%);
             pointer-events: none;
         }
-
         #ui-buttons { 
-            display: flex; 
-            gap: 15px; 
-            pointer-events: auto; 
-            flex-wrap: wrap;
-            justify-content: center;
+            display: flex; gap: 15px; pointer-events: auto; flex-wrap: wrap; justify-content: center;
         }
-        
         button {
             background: transparent; border: none; color: rgba(255,255,255,0.5);
             padding: 10px 8px; cursor: pointer;
-            font-family: 'Cinzel', serif; font-size: 0.8rem;
-            letter-spacing: 1px; text-transform: uppercase;
+            font-family: 'Cinzel', serif; font-size: 0.8rem; letter-spacing: 1px; text-transform: uppercase;
             position: relative; transition: color 0.4s ease;
         }
         button::after {
-            content: ''; position: absolute; bottom: 5px; left: 50%;
-            width: 0; height: 1px; background: var(--gold);
-            transition: all 0.4s ease; transform: translateX(-50%);
+            content: ''; position: absolute; bottom: 5px; left: 50%; width: 0; height: 1px;
+            background: var(--gold); transition: all 0.4s ease; transform: translateX(-50%);
         }
         button:hover { color: white; }
         button.active { color: var(--gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
         button.active::after { width: 80%; }
 
-        /* ZOOM SLIDER */
+        /* ZOOM */
         .zoom-container {
             display: flex; align-items: center; justify-content: center;
-            gap: 15px; opacity: 0; animation: fadeIn 2s forwards 1s;
-            pointer-events: auto;
+            gap: 15px; opacity: 0; animation: fadeIn 2s forwards 1s; pointer-events: auto;
         }
         .zoom-label {
-            font-family: 'Montserrat', sans-serif; font-size: 0.7rem; 
-            color: rgba(255,255,255,0.4); text-transform: uppercase; width: 20px; text-align: center;
+            font-family: 'Montserrat', sans-serif; font-size: 0.7rem; color: rgba(255,255,255,0.4);
+            text-transform: uppercase; width: 20px; text-align: center;
         }
         input[type=range] { -webkit-appearance: none; width: 140px; background: transparent; }
         input[type=range]:focus { outline: none; }
@@ -214,28 +170,19 @@
             box-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
         }
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%; height: 2px; cursor: pointer;
-            background: rgba(255,255,255,0.15); border-radius: 1px;
+            width: 100%; height: 2px; cursor: pointer; background: rgba(255,255,255,0.15); border-radius: 1px;
         }
-
         @keyframes fadeIn { to { opacity: 1; } }
 
-        /* --- SEZIONE TESTO E VIDEO --- */
+        /* CONTENT LEFT */
         .content-left {
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            padding: 40px 20px 80px 20px;
-            box-sizing: border-box;
-            background: var(--bg-dark);
-            box-shadow: 0 -20px 50px rgba(0,0,0,1); 
-            position: relative;
-            z-index: 20; 
-            min-height: 80vh;
+            width: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: center;
+            padding: 40px 20px 80px 20px; box-sizing: border-box;
+            background: var(--bg-dark); box-shadow: 0 -20px 50px rgba(0,0,0,1); 
+            position: relative; z-index: 20; min-height: 80vh;
         }
 
+        /* VIDEO NATIVO */
         .video-container-luxury {
             position: relative; width: 100%; max-width: 600px; padding: 10px; margin-bottom: 40px; margin-top: 20px;
         }
@@ -248,48 +195,22 @@
             border: 1px solid rgba(212, 175, 55, 0.5); pointer-events: none;
         }
         .video-wrapper {
-            position: relative; padding-bottom: 56.25%; height: 0;
-            background: #000; z-index: 2;
+            position: relative; width: 100%; background: #000; z-index: 2;
             box-shadow: 0 10px 40px rgba(0,0,0,0.8);
         }
-        .video-wrapper iframe {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-        }
-
-        #loading-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-dark); z-index: 9999;
-            display: none; /* Parte nascosto, attivato dopo login */
-            flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 1.2s ease;
-        }
-        .loading-logo {
-            font-family: 'Cinzel', serif; font-size: 3rem; color: var(--gold);
-            margin-bottom: 20px; letter-spacing: 5px; animation: pulse 3s infinite;
-        }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-        .loader-line {
-            width: 120px; height: 1px; background: #222; margin-top: 20px; position: relative; overflow: hidden;
-        }
-        .loader-fill {
-            position: absolute; left: 0; top: 0; height: 100%; width: 0%;
-            background: var(--gold); transition: width 0.3s;
+        video {
+            width: 100%; height: auto; display: block; outline: none;
         }
 
         #photo-modal {
-            display: none; position: fixed; z-index: 5000;
-            left: 0; top: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.95);
-            backdrop-filter: blur(10px);
+            display: none; position: fixed; z-index: 5000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.95); backdrop-filter: blur(10px);
             align-items: center; justify-content: center; cursor: zoom-out;
         }
         #modal-image {
             max-width: 90%; max-height: 80%;
-            box-shadow: 0 0 50px rgba(0,0,0,1);
-            border: 1px solid rgba(50,50,50,1);
-            transform: scale(0.95); opacity: 0;
-            transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+            box-shadow: 0 0 50px rgba(0,0,0,1); border: 1px solid rgba(50,50,50,1);
+            transform: scale(0.95); opacity: 0; transition: all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
         #modal-image.open { transform: scale(1); opacity: 1; }
 
@@ -306,8 +227,7 @@
         #easter-toast.show { transform: translateY(0); opacity: 1; }
 
         footer {
-            margin-top: 30px;
-            color: rgba(255,255,255,0.15); font-size: 0.6rem; letter-spacing: 2px;
+            margin-top: 30px; color: rgba(255,255,255,0.15); font-size: 0.6rem; letter-spacing: 2px;
             text-align: center; width: 100%; text-transform: uppercase;
         }
 
@@ -322,11 +242,11 @@
 <body>
 
     <div id="login-screen">
-        <div class="login-content">
-            <div class="login-logo">D&S</div>
-            <p style="color:#666; font-size:0.7rem; letter-spacing:2px; margin-bottom:30px; text-transform:uppercase;">Area Riservata</p>
-            <input type="password" id="password-input" class="login-input" placeholder="CODE">
-            <button id="login-btn" class="login-btn">Entra</button>
+        <div class="login-box">
+            <div class="login-title">Private Access</div>
+            <input type="password" id="password-input" placeholder="Password">
+            <button class="btn-enter" onclick="checkPassword()">Entra</button>
+            <div id="login-error" class="error-msg">Password errata</div>
         </div>
     </div>
 
@@ -362,7 +282,8 @@
                 <div id="ui-buttons">
                     <button id="btn-sphere">Sfera</button>
                     <button id="btn-heart">Cuore</button>
-                    <button id="btn-infinity">Infinito</button> <button id="btn-torus" class="active">Anello</button>
+                    <button id="btn-infinity">Infinito</button>
+                    <button id="btn-torus" class="active">Anello</button>
                 </div>
                 <div class="zoom-container">
                     <span class="zoom-label">-</span>
@@ -377,17 +298,13 @@
                 <div class="video-border-outer"></div>
                 <div class="video-border-inner"></div>
                 <div class="video-wrapper">
-                    <iframe 
-                        width="560" height="315" 
-                        src="https://www.youtube.com/embed/M04ZkpYRkC4?si=g7z_xX8d4b3j9k9P&rel=0&controls=1&modestbranding=1" 
-                        title="YouTube video player" frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                        referrerpolicy="strict-origin-when-cross-origin" allowfullscreen>
-                    </iframe>
+                    <video controls controlsList="nodownload" oncontextmenu="return false;">
+                        <source src="video.mp4" type="video/mp4">
+                        Il tuo browser non supporta il tag video.
+                    </video>
                 </div>
             </div>
-            <footer>Est. 2025 • Private Collection • Crafted by J. Ye</footer>
-
+            <footer>Est. 2025 &bull; Private Collection</footer>
         </div>
 
     </div>
@@ -402,12 +319,7 @@
         }
     </script>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { gsap } from 'gsap';
-
-        // --- HASHING UTILITY ---
+    <script>
         async function sha256(message) {
             const msgBuffer = new TextEncoder().encode(message);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -415,45 +327,49 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
-        
-        const TARGET_HASH = "259bed3fb0c391c3dc899d94c5700bcb48c12e4c008fc79831a12fc7ee925cba";
-
-        // --- LOGIN LOGIC ---
-        const loginScreen = document.getElementById('login-screen');
-        const loginBtn = document.getElementById('login-btn');
-        const passInput = document.getElementById('password-input');
-        const loadingScreen = document.getElementById('loading-screen');
-        const mainContent = document.getElementById('main-content');
-
         async function checkPassword() {
-            const inputVal = passInput.value.trim().toLowerCase();
-            const inputHash = await sha256(inputVal);
+            const input = document.getElementById('password-input').value.toLowerCase().trim(); // Case insensitive
+            const errorMsg = document.getElementById('login-error');
+            
+            // Hash di "vestito"
+            const targetHash = "b5c0b187fe309af0f4d35982fd961d7e5f52445e2c56434421d3158756c24010";
+            
+            const inputHash = await sha256(input);
 
-            if(inputHash === TARGET_HASH) {
-                // Password corretta
-                loginScreen.style.opacity = '0';
+            if (inputHash === targetHash) {
+                // Password Corretta
+                document.getElementById('login-screen').style.opacity = 0;
                 setTimeout(() => {
-                    loginScreen.style.display = 'none';
-                    loadingScreen.style.display = 'flex';
-                    // Rivela contenuto principale
-                    mainContent.style.opacity = '1';
-                    // Avvia app
-                    loadImagesAndStart(); 
-                }, 1000);
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('loading-screen').style.display = 'flex';
+                    // Avvia caricamento 3D
+                    window.startApp(); 
+                }, 500);
             } else {
-                // Password errata
-                passInput.classList.add('error-shake');
-                setTimeout(() => passInput.classList.remove('error-shake'), 500);
-                passInput.value = '';
+                // Password Errata
+                errorMsg.style.opacity = 1;
+                document.getElementById('password-input').value = '';
             }
         }
-
-        loginBtn.addEventListener('click', checkPassword);
-        passInput.addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') checkPassword();
+        
+        // Permette di premere Enter
+        document.getElementById('password-input').addEventListener("keypress", function(event) {
+            if (event.key === "Enter") checkPassword();
         });
+    </script>
 
-        // --- RESTO APP 3D (Non modificato nella logica, solo incapsulato) ---
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { gsap } from 'gsap';
+
+        // Esponiamo la funzione startApp globalmente per chiamarla dopo il login
+        window.startApp = function() {
+            document.getElementById('main-content').style.display = 'flex'; // Mostra il container ma nascosto dal loader
+            loadImagesAndStart();
+        };
+
+        const loadingScreen = document.getElementById('loading-screen');
 
         const totalPhotos = 25;  
         const targetPieces = 800; 
@@ -534,8 +450,6 @@
         const textureUrlMap = new Map();
         let loadedCount = 0;
         const textureLoader = new THREE.TextureLoader();
-        
-        // NOTA: loadImagesAndStart non è più chiamato in automatico, ma da checkPassword()
 
         function loadImagesAndStart() {
             if (imagePaths.length === 0) { initScene(); return; }
@@ -561,7 +475,7 @@
                     loadingScreen.style.opacity = 0;
                     setTimeout(() => {
                         loadingScreen.style.display = 'none';
-                        resize();
+                        resize(); // Ricalcola dimensioni ora che è visibile
                     }, 1200);
                     initScene();
                 }, 800);
@@ -635,14 +549,17 @@
                 let x = (a * Math.cos(t)) / (1 + Math.pow(Math.sin(t), 2));
                 let y = (a * Math.sin(t) * Math.cos(t)) / (1 + Math.pow(Math.sin(t), 2));
                 let z = 0;
+
                 const thickness = 3.5; 
                 const theta = Math.random() * Math.PI * 2;
                 const phi = Math.random() * Math.PI;
                 const r = Math.random() * thickness;
+                
                 x += r * Math.sin(phi) * Math.cos(theta);
                 y += r * Math.sin(phi) * Math.sin(theta);
                 z += r * Math.cos(phi);
                 z += Math.sin(t * 2) * 5; 
+
                 positions.push(x * 0.8, y * 0.8, z * 0.8);
             }
             const geo = new THREE.BufferGeometry();
@@ -697,14 +614,11 @@
 
                 gsap.to(s.position, {
                     x: targetPos.x, y: targetPos.y, z: targetPos.z,
-                    duration: 1.2,
-                    ease: "power2.in"
+                    duration: 1.2, ease: "power2.in"
                 });
                 
                 gsap.to(s.material, {
-                    opacity: 0,
-                    duration: 0.8,
-                    delay: 0.1, 
+                    opacity: 0, duration: 0.8, delay: 0.1, 
                     onComplete: () => { if(s === group.children[0]) group.visible = false; }
                 });
             });
@@ -722,18 +636,12 @@
                 s.material.opacity = 0;
 
                 gsap.to(s.position, {
-                    x: s.userData.originalPos.x,
-                    y: s.userData.originalPos.y,
-                    z: s.userData.originalPos.z,
-                    duration: 2.2,
-                    ease: "power3.out",
-                    delay: Math.random() * 0.3 
+                    x: s.userData.originalPos.x, y: s.userData.originalPos.y, z: s.userData.originalPos.z,
+                    duration: 2.2, ease: "power3.out", delay: Math.random() * 0.3 
                 });
                 
                 gsap.to(s.material, {
-                    opacity: 1,
-                    duration: 1.5,
-                    ease: "power2.out"
+                    opacity: 1, duration: 1.5, ease: "power2.out"
                 });
             });
         }
@@ -746,10 +654,8 @@
                 const tiltZ = (Math.random() - 0.5) * 0.3;
                 
                 gsap.to(currentGroup.rotation, { y: currentGroup.rotation.y + randomBoost, x: currentGroup.rotation.x + tiltX, z: tiltZ, duration: 3.5, ease: "power4.out" });
-                
                 const baseRotX = (currentGroup === heartGroup ? -Math.PI/2 : 0);
                 gsap.to(currentGroup.rotation, { x: baseRotX, z: 0, delay: 3.0, duration: 2, ease: "power2.inOut" });
-
             }, 8000);
         }
 
@@ -763,20 +669,14 @@
 
             function switchShape(name, group) {
                 if (currentGroup === group || isTransitioning) return;
-                
                 isTransitioning = true; 
-
                 explodeGroup(currentGroup);
-                
                 Object.values(btns).forEach(b => b.classList.remove('active'));
                 btns[name].classList.add('active');
-
                 setTimeout(() => {
                     implodeGroup(group);
                     currentGroup = group;
-                    
                     setTimeout(() => { isTransitioning = false; }, 1000);
-
                 }, 900); 
             }
 
