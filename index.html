@@ -898,11 +898,17 @@
         class EternalFlightGame {
             constructor(leaderboard) {
                 this.canvas = document.getElementById('game-canvas');
-                this.ctx = this.canvas.getContext('2d');
+                this.ctx = this.canvas.getContext('2d', {
+                    alpha: false,
+                    desynchronized: true  // Migliora performance rendering
+                });
                 this.width = 400;
                 this.height = 600;
                 this.gameState = 'start';
                 this.leaderboard = leaderboard;
+
+                // Ottimizza canvas per mobile (DPI aware)
+                this.setupCanvas();
 
                 this.ring = {
                     x: 80,
@@ -924,7 +930,44 @@
                 this.score = 0;
                 this.particles = [];
 
+                // Variabili per delta time (frame-independent animation)
+                this.lastTime = 0;
+                this.animationId = null;
+
                 this.setupEventListeners();
+                this.setupVisibilityHandler();
+            }
+
+            // Ottimizza canvas per dispositivi retina/high-DPI
+            setupCanvas() {
+                const dpr = window.devicePixelRatio || 1;
+                const rect = this.canvas.getBoundingClientRect();
+
+                // Imposta dimensioni fisiche del canvas
+                this.canvas.width = this.width * dpr;
+                this.canvas.height = this.height * dpr;
+
+                // Scala il contesto per DPI
+                this.ctx.scale(dpr, dpr);
+
+                // Mantieni dimensioni CSS
+                this.canvas.style.width = this.width + 'px';
+                this.canvas.style.height = this.height + 'px';
+            }
+
+            // Gestisce pausa quando tab non è visibile (risparmio batteria)
+            setupVisibilityHandler() {
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden) {
+                        if (this.animationId) {
+                            cancelAnimationFrame(this.animationId);
+                            this.animationId = null;
+                        }
+                    } else if (this.gameState === 'playing') {
+                        this.lastTime = 0; // Reset timer
+                        this.gameLoop(performance.now());
+                    }
+                });
             }
 
             setupEventListeners() {
@@ -944,6 +987,8 @@
                 });
 
                 this.canvas.addEventListener('click', handleJump);
+
+                // Touch ottimizzato per mobile
                 this.canvas.addEventListener('touchstart', (e) => {
                     e.preventDefault();
                     handleJump();
@@ -965,33 +1010,50 @@
                 this.score = 0;
                 this.frameCount = 0;
                 this.obstacleSpeed = this.baseSpeed;
+                this.lastTime = 0;  // Reset delta time
                 this.updateScoreDisplay();
                 this.hideStartScreen();
                 this.hideGameOverScreen();
-                this.gameLoop();
+                this.gameLoop(performance.now());
             }
 
-            gameLoop() {
+            // Game loop ottimizzato con delta time
+            gameLoop(currentTime) {
                 if(this.gameState !== 'playing') return;
 
-                this.update();
+                // Calcola delta time
+                if (!this.lastTime) this.lastTime = currentTime;
+                const deltaTime = (currentTime - this.lastTime) / 1000; // in secondi
+                this.lastTime = currentTime;
+
+                // Limita delta time per evitare salti quando tab ritorna attivo
+                const cappedDelta = Math.min(deltaTime, 0.1);
+
+                this.update(cappedDelta);
                 this.draw();
 
-                requestAnimationFrame(() => this.gameLoop());
+                this.animationId = requestAnimationFrame((time) => this.gameLoop(time));
             }
 
-            update() {
+            // Update con delta time per animazioni frame-independent
+            update(deltaTime) {
+                // Converti a "frame units" (60 FPS come baseline)
+                const frameMultiplier = deltaTime * 60;
+
                 this.frameCount++;
 
-                this.ring.velocity += this.ring.gravity;
-                this.ring.y += this.ring.velocity;
+                // Fisica uccello con delta time
+                this.ring.velocity += this.ring.gravity * frameMultiplier;
+                this.ring.y += this.ring.velocity * frameMultiplier;
 
+                // Spawn ostacoli
                 if(this.frameCount % this.spawnInterval === 0) {
                     this.spawnObstacle();
                 }
 
+                // Aggiorna ostacoli con delta time
                 this.obstacles.forEach(obs => {
-                    obs.x -= this.obstacleSpeed;
+                    obs.x -= this.obstacleSpeed * frameMultiplier;
 
                     if(!obs.scored && obs.x + this.obstacleWidth < this.ring.x) {
                         obs.scored = true;
@@ -999,6 +1061,7 @@
                         this.updateScoreDisplay();
                         this.createParticles(this.ring.x, this.ring.y, 8);
 
+                        // Aumenta difficoltà progressivamente
                         if(this.score > 5) {
                             const increment = 0.08;
                             this.obstacleSpeed = Math.min(3.5, this.baseSpeed + ((this.score - 5) * increment));
@@ -1006,21 +1069,25 @@
                     }
                 });
 
+                // Rimuovi ostacoli fuori schermo
                 this.obstacles = this.obstacles.filter(obs => obs.x > -this.obstacleWidth);
 
+                // Aggiorna particelle con delta time
                 this.particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.life -= 0.02;
+                    p.x += p.vx * frameMultiplier;
+                    p.y += p.vy * frameMultiplier;
+                    p.life -= 0.02 * frameMultiplier;
                 });
                 this.particles = this.particles.filter(p => p.life > 0);
 
+                // Check collisioni
                 if(this.checkCollision()) {
                     this.gameOver();
                 }
             }
 
             draw() {
+                // Sfondo
                 this.ctx.fillStyle = '#0a0a0a';
                 this.ctx.fillRect(0, 0, this.width, this.height);
 
@@ -1047,72 +1114,53 @@
                 const y = this.ring.y;
                 const r = this.ring.radius;
 
+                // Glow effect
                 const gradient = this.ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 2);
                 gradient.addColorStop(0, 'rgba(212, 175, 55, 0.3)');
                 gradient.addColorStop(1, 'rgba(212, 175, 55, 0)');
                 this.ctx.fillStyle = gradient;
                 this.ctx.fillRect(x - r * 2, y - r * 2, r * 4, r * 4);
 
+                // Anello principale
                 this.ctx.strokeStyle = '#D4AF37';
                 this.ctx.lineWidth = 4;
                 this.ctx.beginPath();
                 this.ctx.arc(x, y, r, 0, Math.PI * 2);
                 this.ctx.stroke();
 
+                // Anello interno
                 this.ctx.strokeStyle = '#F3E5AB';
                 this.ctx.lineWidth = 2;
                 this.ctx.beginPath();
-                this.ctx.arc(x, y, r * 0.6, 0, Math.PI * 2);
+                this.ctx.arc(x, y, r - 6, 0, Math.PI * 2);
                 this.ctx.stroke();
-
-                this.ctx.save();
-                this.ctx.translate(x, y - r);
-                this.ctx.fillStyle = '#fff';
-                this.ctx.shadowBlur = 10;
-                this.ctx.shadowColor = '#F3E5AB';
-                this.ctx.beginPath();
-                this.ctx.moveTo(0, -5);
-                this.ctx.lineTo(3, 0);
-                this.ctx.lineTo(0, 3);
-                this.ctx.lineTo(-3, 0);
-                this.ctx.closePath();
-                this.ctx.fill();
-                this.ctx.restore();
             }
 
             drawObstacle(obs) {
-                const goldGradient = this.ctx.createLinearGradient(obs.x, 0, obs.x + this.obstacleWidth, 0);
-                goldGradient.addColorStop(0, 'rgba(100, 100, 100, 0.8)');
-                goldGradient.addColorStop(0.5, 'rgba(150, 150, 150, 0.9)');
-                goldGradient.addColorStop(1, 'rgba(100, 100, 100, 0.8)');
+                const gradient = this.ctx.createLinearGradient(obs.x, 0, obs.x + this.obstacleWidth, 0);
+                gradient.addColorStop(0, 'rgba(212, 175, 55, 0.3)');
+                gradient.addColorStop(0.5, 'rgba(212, 175, 55, 0.5)');
+                gradient.addColorStop(1, 'rgba(212, 175, 55, 0.3)');
 
-                this.ctx.fillStyle = goldGradient;
+                // Ostacolo superiore
+                this.ctx.fillStyle = gradient;
                 this.ctx.fillRect(obs.x, 0, this.obstacleWidth, obs.topHeight);
-
-                this.ctx.fillStyle = 'rgba(212, 175, 55, 0.6)';
-                this.ctx.fillRect(obs.x + 15, obs.topHeight - 30, 30, 30);
-
-                this.ctx.fillStyle = goldGradient;
-                this.ctx.fillRect(obs.x, obs.bottomY, this.obstacleWidth, this.height - obs.bottomY);
-
-                this.ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
-                this.ctx.lineWidth = 2;
-                for(let i = 0; i < 3; i++) {
-                    const layerY = obs.bottomY + i * 20;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(obs.x, layerY);
-                    this.ctx.lineTo(obs.x + this.obstacleWidth, layerY);
-                    this.ctx.stroke();
-                }
-
-                this.ctx.strokeStyle = 'rgba(212, 175, 55, 0.3)';
+                this.ctx.strokeStyle = '#D4AF37';
                 this.ctx.lineWidth = 2;
                 this.ctx.strokeRect(obs.x, 0, this.obstacleWidth, obs.topHeight);
+
+                // Ostacolo inferiore
+                this.ctx.fillRect(obs.x, obs.bottomY, this.obstacleWidth, this.height - obs.bottomY);
                 this.ctx.strokeRect(obs.x, obs.bottomY, this.obstacleWidth, this.height - obs.bottomY);
             }
 
+            drawParticle(p) {
+                this.ctx.fillStyle = `rgba(212, 175, 55, ${p.life})`;
+                this.ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+            }
+
             spawnObstacle() {
-                const minHeight = 100;
+                const minHeight = 60;
                 const maxHeight = this.height - this.obstacleGap - minHeight;
                 const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
 
@@ -1124,17 +1172,32 @@
                 });
             }
 
+            createParticles(x, y, count) {
+                for(let i = 0; i < count; i++) {
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 4,
+                        vy: (Math.random() - 0.5) * 4,
+                        life: 1
+                    });
+                }
+            }
+
             checkCollision() {
-                if(this.ring.y - this.ring.radius < 0 || this.ring.y + this.ring.radius > this.height) {
+                const r = this.ring.radius;
+                const rx = this.ring.x;
+                const ry = this.ring.y;
+
+                // Collisione con bordi
+                if(ry - r < 0 || ry + r > this.height) {
                     return true;
                 }
 
+                // Collisione con ostacoli
                 for(let obs of this.obstacles) {
-                    if(this.ring.x + this.ring.radius > obs.x && 
-                       this.ring.x - this.ring.radius < obs.x + this.obstacleWidth) {
-
-                        if(this.ring.y - this.ring.radius < obs.topHeight || 
-                           this.ring.y + this.ring.radius > obs.bottomY) {
+                    if(rx + r > obs.x && rx - r < obs.x + this.obstacleWidth) {
+                        if(ry - r < obs.topHeight || ry + r > obs.bottomY) {
                             return true;
                         }
                     }
@@ -1143,74 +1206,50 @@
                 return false;
             }
 
-            createParticles(x, y, count) {
-                for(let i = 0; i < count; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = Math.random() * 2 + 1;
-
-                    this.particles.push({
-                        x: x,
-                        y: y,
-                        vx: Math.cos(angle) * speed,
-                        vy: Math.sin(angle) * speed,
-                        life: 1,
-                        size: Math.random() * 3 + 2
-                    });
-                }
-            }
-
-            drawParticle(p) {
-                this.ctx.fillStyle = `rgba(212, 175, 55, ${p.life})`;
-                this.ctx.beginPath();
-                this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                this.ctx.fill();
-            }
-
             async gameOver() {
-                this.gameState = 'gameover';
-                this.createParticles(this.ring.x, this.ring.y, 30);
+                this.gameState = 'gameOver';
 
-                if(this.leaderboard.isTopScore(this.score)) {
-                    this.showNameInput();
-                } else {
-                    this.showGameOverScreen();
+                // Ferma animation loop
+                if (this.animationId) {
+                    cancelAnimationFrame(this.animationId);
+                    this.animationId = null;
                 }
-            }
 
-            showNameInput() {
-                const modal = document.getElementById('name-input-modal');
-                const input = document.getElementById('player-name-input');
-                input.value = '';
-                modal.classList.add('active');
-
-                setTimeout(() => input.focus(), 300);
-            }
-
-            async submitScore(playerName) {
-                await this.leaderboard.addScore(playerName, this.score);
                 this.showGameOverScreen();
+
+                if(this.leaderboard) {
+                    await this.leaderboard.submitScore(this.score);
+                }
             }
 
             updateScoreDisplay() {
-                document.getElementById('score-display').textContent = this.score;
+                const scoreEl = document.getElementById('game-score');
+                if(scoreEl) scoreEl.textContent = this.score;
+            }
+
+            showStartScreen() {
+                const el = document.getElementById('game-start-screen');
+                if(el) el.style.display = 'flex';
             }
 
             hideStartScreen() {
-                document.getElementById('game-start-screen').style.display = 'none';
+                const el = document.getElementById('game-start-screen');
+                if(el) el.style.display = 'none';
             }
 
             showGameOverScreen() {
-                const gameOverScreen = document.getElementById('game-over-screen');
-                document.getElementById('final-score').textContent = `Score: ${this.score}`;
-                gameOverScreen.style.display = 'block';
+                const el = document.getElementById('game-over-screen');
+                const finalScoreEl = document.getElementById('final-score');
+                if(el) el.style.display = 'flex';
+                if(finalScoreEl) finalScoreEl.textContent = this.score;
             }
 
             hideGameOverScreen() {
-                document.getElementById('game-over-screen').style.display = 'none';
+                const el = document.getElementById('game-over-screen');
+                if(el) el.style.display = 'none';
             }
         }
 
-        // ===========================================
         // GAME INITIALIZATION
         // ===========================================
 
