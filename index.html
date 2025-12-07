@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Davide & Silvia | Luxury Edition</title>
-
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
@@ -15,6 +15,7 @@
             --gold-light: #F3E5AB;      
             --bg-dark: #080808;         
             --text-grey: #888888;
+            --error-red: #8a2be2; 
         }
 
         html, body {
@@ -32,6 +33,7 @@
             display: block; 
         }
 
+        /* TEXTURE DI SFONDO */
         body::before {
             content: "";
             position: fixed;
@@ -42,124 +44,10 @@
             opacity: 0.4;
         }
 
-        /* --- GAME OVERLAY --- */
-        #game-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(8,8,8,0.98);
-            backdrop-filter: blur(20px);
-            z-index: 10000;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        #game-overlay.active {
-            display: flex;
-            opacity: 1;
-        }
-
-        #game-canvas {
-            border: 2px solid rgba(212, 175, 55, 0.3);
-            box-shadow: 0 0 50px rgba(212, 175, 55, 0.2);
-            background: linear-gradient(to bottom, #0a0a0a, #050505);
-            max-width: 90%;
-            max-height: 70vh;
-        }
-
-        .game-ui {
-            position: absolute;
-            top: 20px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 30px;
-            font-family: 'Cinzel', serif;
-            color: var(--gold);
-            font-size: 1.5rem;
-            letter-spacing: 2px;
-            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
-            pointer-events: none;
-        }
-
-        #game-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: transparent;
-            border: 1px solid rgba(212, 175, 55, 0.5);
-            color: var(--gold);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Montserrat', sans-serif;
-        }
-
-        #game-close:hover {
-            background: var(--gold);
-            color: #000;
-            transform: rotate(90deg);
-        }
-
-        .game-start-screen, .game-over-screen {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            text-align: center;
-            z-index: 2;
-        }
-
-        .game-start-screen h2, .game-over-screen h2 {
-            font-family: 'Cinzel', serif;
-            font-size: 2rem;
-            color: var(--gold);
-            margin-bottom: 20px;
-            letter-spacing: 3px;
-            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
-        }
-
-        .game-start-screen p, .game-over-screen p {
-            color: #888;
-            font-size: 0.9rem;
-            letter-spacing: 1px;
-            margin-bottom: 30px;
-        }
-
-        .game-btn {
-            background: rgba(212, 175, 55, 0.1);
-            border: 1px solid var(--gold);
-            color: var(--gold);
-            padding: 15px 40px;
-            font-family: 'Cinzel', serif;
-            font-size: 1rem;
-            letter-spacing: 2px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-        }
-
-        .game-btn:hover {
-            background: var(--gold);
-            color: #000;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
-        }
-
-        /* --- LOGIN SCREEN --- */
+        /* --- LOGIN SCREEN (PROTEZIONE) --- */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-dark); z-index: 20000;
+            background: var(--bg-dark); z-index: 20000; /* Sopra a tutto */
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 1s ease, visibility 1s;
         }
@@ -194,11 +82,11 @@
             width: 100%;
             position: relative;
             z-index: 1;
-            opacity: 0;
+            opacity: 0; /* Nascosto inizialmente */
             transition: opacity 1.5s ease;
         }
 
-        /* --- SEZIONE 3D --- */
+        /* --- SEZIONE 3D (HERO PAGE) --- */
         .content-right {
             position: relative;
             width: 100%;
@@ -209,7 +97,7 @@
             overflow: hidden;
             margin-bottom: 0;
         }
-
+        
         #canvas-container {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -222,6 +110,7 @@
             touch-action: pan-y !important; 
         }
 
+        /* --- TITOLO IN ALTO --- */
         .header-overlay {
             position: absolute;
             top: 0; left: 0; width: 100%;
@@ -256,7 +145,7 @@
             text-align: center;
             text-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
-
+        
         #easter-trigger { cursor: help; transition: opacity 0.3s; }
         #easter-trigger:hover { opacity: 0.7; }
 
@@ -266,6 +155,7 @@
             text-shadow: 0 5px 15px rgba(0,0,0,0.8);
         }
 
+        /* --- UI CONTROLS (DOCK IN BASSO) --- */
         #ui-wrapper {
             position: absolute;
             bottom: 0;
@@ -289,7 +179,7 @@
             flex-wrap: wrap;
             justify-content: center;
         }
-
+        
         button {
             background: transparent; border: none; color: rgba(255,255,255,0.5);
             padding: 10px 8px; cursor: pointer;
@@ -306,19 +196,7 @@
         button.active { color: var(--gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
         button.active::after { width: 80%; }
 
-        /* GAME BUTTON */
-        #btn-game {
-            color: var(--gold);
-            font-size: 1.2rem;
-            padding: 8px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 0.6; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.1); }
-        }
-
+        /* ZOOM SLIDER */
         .zoom-container {
             display: flex; align-items: center; justify-content: center;
             gap: 15px; opacity: 0; animation: fadeIn 2s forwards 1s;
@@ -342,6 +220,7 @@
 
         @keyframes fadeIn { to { opacity: 1; } }
 
+        /* --- SEZIONE TESTO E VIDEO --- */
         .content-left {
             width: 100%;
             display: flex;
@@ -380,7 +259,7 @@
         #loading-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-dark); z-index: 9999;
-            display: none;
+            display: none; /* Parte nascosto, attivato dopo login */
             flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 1.2s ease;
         }
@@ -388,6 +267,7 @@
             font-family: 'Cinzel', serif; font-size: 3rem; color: var(--gold);
             margin-bottom: 20px; letter-spacing: 5px; animation: pulse 3s infinite;
         }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
         .loader-line {
             width: 120px; height: 1px; background: #222; margin-top: 20px; position: relative; overflow: hidden;
@@ -441,26 +321,6 @@
 </head>
 <body>
 
-    <!-- GAME OVERLAY -->
-    <div id="game-overlay">
-        <button id="game-close">×</button>
-        <div class="game-ui">
-            <div id="score-display">0</div>
-            <div id="high-score-display">Best: 0</div>
-        </div>
-        <canvas id="game-canvas" width="400" height="600"></canvas>
-        <div id="game-start-screen" class="game-start-screen">
-            <h2>ETERNAL FLIGHT</h2>
-            <p>Tap o Spazio per far volare l'anello<br>Evita gli ostacoli!</p>
-            <button class="game-btn" id="start-game-btn">INIZIA</button>
-        </div>
-        <div id="game-over-screen" class="game-over-screen" style="display:none;">
-            <h2>GAME OVER</h2>
-            <p id="final-score">Score: 0</p>
-            <button class="game-btn" id="restart-game-btn">RIPROVA</button>
-        </div>
-    </div>
-
     <div id="login-screen">
         <div class="login-content">
             <div class="login-logo">D&S</div>
@@ -486,9 +346,9 @@
     </div>
 
     <div id="main-content">
-
+        
         <div class="content-right">
-
+            
             <div class="header-overlay">
                 <div class="title-group">
                     <h1>Davide <span id="easter-trigger" style="font-family:'Baskerville', serif; font-style:italic; color:var(--gold);">&amp;</span> Silvia</h1>
@@ -497,14 +357,12 @@
             </div>
 
             <div id="canvas-container"></div>
-
+            
             <div id="ui-wrapper">
                 <div id="ui-buttons">
                     <button id="btn-sphere">Sfera</button>
                     <button id="btn-heart">Cuore</button>
-                    <button id="btn-infinity">Infinito</button>
-                    <button id="btn-torus" class="active">Anello</button>
-                    <button id="btn-game" title="Easter Egg!">💍</button>
+                    <button id="btn-infinity">Infinito</button> <button id="btn-torus" class="active">Anello</button>
                 </div>
                 <div class="zoom-container">
                     <span class="zoom-label">-</span>
@@ -529,6 +387,7 @@
                 </div>
             </div>
             <footer>Est. 2025 • Private Collection • Crafted by J. Ye</footer>
+
         </div>
 
     </div>
@@ -548,379 +407,7 @@
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { gsap } from 'gsap';
 
-        // ===========================================
-        // GAME LOGIC - "ETERNAL FLIGHT"
-        // ===========================================
-
-        class EternalFlightGame {
-            constructor() {
-                this.canvas = document.getElementById('game-canvas');
-                this.ctx = this.canvas.getContext('2d');
-                this.width = 400;
-                this.height = 600;
-                this.gameState = 'start'; // start, playing, gameover
-
-                // Player (Ring)
-                this.ring = {
-                    x: 80,
-                    y: this.height / 2,
-                    radius: 20,
-                    velocity: 0,
-                    gravity: 0.5,
-                    jump: -9
-                };
-
-                // Obstacles
-                this.obstacles = [];
-                this.obstacleWidth = 60;
-                this.obstacleGap = 180;
-                this.obstacleSpeed = 2.5;
-                this.frameCount = 0;
-                this.spawnInterval = 90;
-
-                // Score
-                this.score = 0;
-                this.highScore = localStorage.getItem('eternalFlightHighScore') || 0;
-
-                // Particles
-                this.particles = [];
-
-                this.setupEventListeners();
-                this.updateHighScoreDisplay();
-            }
-
-            setupEventListeners() {
-                const handleJump = () => {
-                    if(this.gameState === 'playing') {
-                        this.ring.velocity = this.ring.jump;
-                        this.createParticles(this.ring.x, this.ring.y, 5);
-                        this.triggerHaptic();
-                    }
-                };
-
-                document.addEventListener('keydown', (e) => {
-                    if(e.code === 'Space' && this.gameState === 'playing') {
-                        e.preventDefault();
-                        handleJump();
-                    }
-                });
-
-                this.canvas.addEventListener('click', handleJump);
-                this.canvas.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    handleJump();
-                }, {passive: false});
-            }
-
-            triggerHaptic() {
-                if('vibrate' in navigator) {
-                    navigator.vibrate(10);
-                }
-            }
-
-            start() {
-                this.gameState = 'playing';
-                this.ring.y = this.height / 2;
-                this.ring.velocity = 0;
-                this.obstacles = [];
-                this.particles = [];
-                this.score = 0;
-                this.frameCount = 0;
-                this.updateScoreDisplay();
-                this.hideStartScreen();
-                this.hideGameOverScreen();
-                this.gameLoop();
-            }
-
-            gameLoop() {
-                if(this.gameState !== 'playing') return;
-
-                this.update();
-                this.draw();
-
-                requestAnimationFrame(() => this.gameLoop());
-            }
-
-            update() {
-                this.frameCount++;
-
-                // Update ring
-                this.ring.velocity += this.ring.gravity;
-                this.ring.y += this.ring.velocity;
-
-                // Spawn obstacles
-                if(this.frameCount % this.spawnInterval === 0) {
-                    this.spawnObstacle();
-                }
-
-                // Update obstacles
-                this.obstacles.forEach(obs => {
-                    obs.x -= this.obstacleSpeed;
-
-                    // Score point
-                    if(!obs.scored && obs.x + this.obstacleWidth < this.ring.x) {
-                        obs.scored = true;
-                        this.score++;
-                        this.updateScoreDisplay();
-                        this.createParticles(this.ring.x, this.ring.y, 8);
-                    }
-                });
-
-                // Remove off-screen obstacles
-                this.obstacles = this.obstacles.filter(obs => obs.x > -this.obstacleWidth);
-
-                // Update particles
-                this.particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
-                    p.life -= 0.02;
-                });
-                this.particles = this.particles.filter(p => p.life > 0);
-
-                // Check collisions
-                if(this.checkCollision()) {
-                    this.gameOver();
-                }
-
-                // Increase difficulty
-                if(this.score > 0 && this.score % 10 === 0) {
-                    this.obstacleSpeed = Math.min(4.5, 2.5 + (this.score / 20));
-                }
-            }
-
-            draw() {
-                // Clear canvas
-                this.ctx.fillStyle = '#0a0a0a';
-                this.ctx.fillRect(0, 0, this.width, this.height);
-
-                // Draw subtle grid
-                this.drawGrid();
-
-                // Draw obstacles
-                this.obstacles.forEach(obs => this.drawObstacle(obs));
-
-                // Draw particles
-                this.particles.forEach(p => this.drawParticle(p));
-
-                // Draw ring
-                this.drawRing();
-            }
-
-            drawGrid() {
-                this.ctx.strokeStyle = 'rgba(212, 175, 55, 0.05)';
-                this.ctx.lineWidth = 1;
-
-                for(let x = 0; x < this.width; x += 40) {
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(x, 0);
-                    this.ctx.lineTo(x, this.height);
-                    this.ctx.stroke();
-                }
-            }
-
-            drawRing() {
-                const x = this.ring.x;
-                const y = this.ring.y;
-                const r = this.ring.radius;
-
-                // Outer glow
-                const gradient = this.ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 2);
-                gradient.addColorStop(0, 'rgba(212, 175, 55, 0.3)');
-                gradient.addColorStop(1, 'rgba(212, 175, 55, 0)');
-                this.ctx.fillStyle = gradient;
-                this.ctx.fillRect(x - r * 2, y - r * 2, r * 4, r * 4);
-
-                // Ring
-                this.ctx.strokeStyle = '#D4AF37';
-                this.ctx.lineWidth = 4;
-                this.ctx.beginPath();
-                this.ctx.arc(x, y, r, 0, Math.PI * 2);
-                this.ctx.stroke();
-
-                // Inner ring
-                this.ctx.strokeStyle = '#F3E5AB';
-                this.ctx.lineWidth = 2;
-                this.ctx.beginPath();
-                this.ctx.arc(x, y, r * 0.6, 0, Math.PI * 2);
-                this.ctx.stroke();
-
-                // Diamond on ring
-                this.ctx.save();
-                this.ctx.translate(x, y - r);
-                this.ctx.fillStyle = '#fff';
-                this.ctx.shadowBlur = 10;
-                this.ctx.shadowColor = '#F3E5AB';
-                this.ctx.beginPath();
-                this.ctx.moveTo(0, -5);
-                this.ctx.lineTo(3, 0);
-                this.ctx.lineTo(0, 3);
-                this.ctx.lineTo(-3, 0);
-                this.ctx.closePath();
-                this.ctx.fill();
-                this.ctx.restore();
-            }
-
-            drawObstacle(obs) {
-                const goldGradient = this.ctx.createLinearGradient(obs.x, 0, obs.x + this.obstacleWidth, 0);
-                goldGradient.addColorStop(0, 'rgba(100, 100, 100, 0.8)');
-                goldGradient.addColorStop(0.5, 'rgba(150, 150, 150, 0.9)');
-                goldGradient.addColorStop(1, 'rgba(100, 100, 100, 0.8)');
-
-                // Top obstacle (Champagne bottle)
-                this.ctx.fillStyle = goldGradient;
-                this.ctx.fillRect(obs.x, 0, this.obstacleWidth, obs.topHeight);
-
-                // Bottle neck
-                this.ctx.fillStyle = 'rgba(212, 175, 55, 0.6)';
-                this.ctx.fillRect(obs.x + 15, obs.topHeight - 30, 30, 30);
-
-                // Bottom obstacle (Wedding cake)
-                this.ctx.fillStyle = goldGradient;
-                this.ctx.fillRect(obs.x, obs.bottomY, this.obstacleWidth, this.height - obs.bottomY);
-
-                // Cake layers
-                this.ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
-                this.ctx.lineWidth = 2;
-                for(let i = 0; i < 3; i++) {
-                    const layerY = obs.bottomY + i * 20;
-                    this.ctx.beginPath();
-                    this.ctx.moveTo(obs.x, layerY);
-                    this.ctx.lineTo(obs.x + this.obstacleWidth, layerY);
-                    this.ctx.stroke();
-                }
-
-                // Border glow
-                this.ctx.strokeStyle = 'rgba(212, 175, 55, 0.3)';
-                this.ctx.lineWidth = 2;
-                this.ctx.strokeRect(obs.x, 0, this.obstacleWidth, obs.topHeight);
-                this.ctx.strokeRect(obs.x, obs.bottomY, this.obstacleWidth, this.height - obs.bottomY);
-            }
-
-            spawnObstacle() {
-                const minHeight = 100;
-                const maxHeight = this.height - this.obstacleGap - minHeight;
-                const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
-
-                this.obstacles.push({
-                    x: this.width,
-                    topHeight: topHeight,
-                    bottomY: topHeight + this.obstacleGap,
-                    scored: false
-                });
-            }
-
-            checkCollision() {
-                // Floor and ceiling
-                if(this.ring.y - this.ring.radius < 0 || this.ring.y + this.ring.radius > this.height) {
-                    return true;
-                }
-
-                // Obstacles
-                for(let obs of this.obstacles) {
-                    if(this.ring.x + this.ring.radius > obs.x && 
-                       this.ring.x - this.ring.radius < obs.x + this.obstacleWidth) {
-
-                        if(this.ring.y - this.ring.radius < obs.topHeight || 
-                           this.ring.y + this.ring.radius > obs.bottomY) {
-                            return true;
-                        }
-                    }
-                }
-
-                return false;
-            }
-
-            createParticles(x, y, count) {
-                for(let i = 0; i < count; i++) {
-                    const angle = Math.random() * Math.PI * 2;
-                    const speed = Math.random() * 2 + 1;
-
-                    this.particles.push({
-                        x: x,
-                        y: y,
-                        vx: Math.cos(angle) * speed,
-                        vy: Math.sin(angle) * speed,
-                        life: 1,
-                        size: Math.random() * 3 + 2
-                    });
-                }
-            }
-
-            drawParticle(p) {
-                this.ctx.fillStyle = `rgba(212, 175, 55, ${p.life})`;
-                this.ctx.beginPath();
-                this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                this.ctx.fill();
-            }
-
-            gameOver() {
-                this.gameState = 'gameover';
-                this.showGameOverScreen();
-
-                if(this.score > this.highScore) {
-                    this.highScore = this.score;
-                    localStorage.setItem('eternalFlightHighScore', this.highScore);
-                    this.updateHighScoreDisplay();
-                }
-
-                // Explosion particles
-                this.createParticles(this.ring.x, this.ring.y, 30);
-            }
-
-            updateScoreDisplay() {
-                document.getElementById('score-display').textContent = this.score;
-            }
-
-            updateHighScoreDisplay() {
-                document.getElementById('high-score-display').textContent = `Best: ${this.highScore}`;
-            }
-
-            hideStartScreen() {
-                document.getElementById('game-start-screen').style.display = 'none';
-            }
-
-            showGameOverScreen() {
-                const gameOverScreen = document.getElementById('game-over-screen');
-                document.getElementById('final-score').textContent = `Score: ${this.score}`;
-                gameOverScreen.style.display = 'block';
-            }
-
-            hideGameOverScreen() {
-                document.getElementById('game-over-screen').style.display = 'none';
-            }
-        }
-
-        // Initialize game
-        let game = null;
-
-        document.getElementById('btn-game').addEventListener('click', () => {
-            document.getElementById('game-overlay').classList.add('active');
-            if(!game) {
-                game = new EternalFlightGame();
-            }
-        });
-
-        document.getElementById('game-close').addEventListener('click', () => {
-            document.getElementById('game-overlay').classList.remove('active');
-            if(game) {
-                game.gameState = 'start';
-                document.getElementById('game-start-screen').style.display = 'block';
-                document.getElementById('game-over-screen').style.display = 'none';
-            }
-        });
-
-        document.getElementById('start-game-btn').addEventListener('click', () => {
-            if(game) game.start();
-        });
-
-        document.getElementById('restart-game-btn').addEventListener('click', () => {
-            if(game) game.start();
-        });
-
-        // ===========================================
-        // ORIGINAL 3D APP LOGIC
-        // ===========================================
-
+        // --- HASHING UTILITY ---
         async function sha256(message) {
             const msgBuffer = new TextEncoder().encode(message);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -928,8 +415,10 @@
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+        
         const TARGET_HASH = "259bed3fb0c391c3dc899d94c5700bcb48c12e4c008fc79831a12fc7ee925cba";
 
+        // --- LOGIN LOGIC ---
         const loginScreen = document.getElementById('login-screen');
         const loginBtn = document.getElementById('login-btn');
         const passInput = document.getElementById('password-input');
@@ -941,14 +430,18 @@
             const inputHash = await sha256(inputVal);
 
             if(inputHash === TARGET_HASH) {
+                // Password corretta
                 loginScreen.style.opacity = '0';
                 setTimeout(() => {
                     loginScreen.style.display = 'none';
                     loadingScreen.style.display = 'flex';
+                    // Rivela contenuto principale
                     mainContent.style.opacity = '1';
+                    // Avvia app
                     loadImagesAndStart(); 
                 }, 1000);
             } else {
+                // Password errata
                 passInput.classList.add('error-shake');
                 setTimeout(() => passInput.classList.remove('error-shake'), 500);
                 passInput.value = '';
@@ -960,19 +453,21 @@
             if(e.key === 'Enter') checkPassword();
         });
 
-        const totalPhotos = 15;  
-        const targetPieces = 750; 
+        // --- RESTO APP 3D (Non modificato nella logica, solo incapsulato) ---
 
+        const totalPhotos = 25;  
+        const targetPieces = 800; 
+        
         const repeats = Math.ceil(targetPieces / totalPhotos);
         const imagePaths = Array.from({length: totalPhotos}, (_, i) => `./foto/${i + 1}.jpg`);
 
         const canvasContainer = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-
+        
         const isMobile = window.innerWidth < 900;
 
         const camera = new THREE.PerspectiveCamera(50, canvasContainer.offsetWidth / canvasContainer.offsetHeight, 0.1, 1000);
-
+        
         const minZ = 0.5;  
         const maxZ = isMobile ? 55 : 60;  
         const initialZ = isMobile ? 45 : 24; 
@@ -982,17 +477,17 @@
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         canvasContainer.appendChild(renderer.domElement);
-
+        
         const controls = new OrbitControls(camera, renderer.domElement);
         controls.enableDamping = true; controls.dampingFactor = 0.03;
         controls.autoRotate = true; controls.autoRotateSpeed = 0.6;
         controls.enablePan = false;
-
+        
         controls.enableZoom = true; 
         controls.zoomSpeed = 0.8;
         controls.minDistance = minZ; 
         controls.maxDistance = maxZ; 
-
+        
         if(isMobile) {
             controls.rotateSpeed = 0.7;
         }
@@ -1039,6 +534,8 @@
         const textureUrlMap = new Map();
         let loadedCount = 0;
         const textureLoader = new THREE.TextureLoader();
+        
+        // NOTA: loadImagesAndStart non è più chiamato in automatico, ma da checkPassword()
 
         function loadImagesAndStart() {
             if (imagePaths.length === 0) { initScene(); return; }
@@ -1058,7 +555,7 @@
             const percent = Math.round((loadedCount / totalPhotos) * 100);
             const progressBar = document.getElementById('loader-progress');
             if(progressBar) progressBar.style.width = percent + "%";
-
+            
             if (loadedCount >= totalPhotos) {
                 setTimeout(() => {
                     loadingScreen.style.opacity = 0;
@@ -1073,7 +570,7 @@
 
         function createSpriteGroup(geometry, spriteBaseSize, addJitter) {
             const group = new THREE.Group();
-
+            
             let positions;
             if (geometry.isBufferGeometry) {
                 positions = geometry.getAttribute('position').array;
@@ -1100,14 +597,14 @@
                 const idx = vIndices[i];
                 let x = positions[idx*3], y = positions[idx*3+1], z = positions[idx*3+2];
                 if (addJitter) { x += (Math.random()-0.5)*0.5; y += (Math.random()-0.5)*0.5; z += (Math.random()-0.5)*0.5; }
-
+                
                 sprite.position.set(x,y,z);
-
+                
                 sprite.userData = { 
                     photoUrl: textureUrlMap.get(texture),
                     originalPos: new THREE.Vector3(x, y, z) 
                 };
-
+                
                 const s = (spriteBaseSize * mobileScaleMultiplier) * (0.7 + Math.random()*0.4);
                 sprite.scale.set(s,s,1);
                 group.add(sprite);
@@ -1167,12 +664,12 @@
             sphereGroup = createSpriteGroup(new THREE.SphereGeometry(7, 30, 30), 0.9, true);
             positionGroupForMobile(sphereGroup);
             scene.add(sphereGroup);
-
+            
             heartGroup = createSpriteGroup(createHeartGeometry(targetPieces), 0.8, false);
             heartGroup.rotation.x = -Math.PI / 2; 
             positionGroupForMobile(heartGroup);
             scene.add(heartGroup);
-
+            
             torusGroup = createSpriteGroup(new THREE.TorusGeometry(6, 2.0, 20, 40), 0.9, false);
             positionGroupForMobile(torusGroup);
             scene.add(torusGroup);
@@ -1183,7 +680,7 @@
 
             implodeGroup(torusGroup);
             currentGroup = torusGroup;
-
+            
             setupButtons();
             setupInteraction();
             setupAutoDynamics();
@@ -1203,7 +700,7 @@
                     duration: 1.2,
                     ease: "power2.in"
                 });
-
+                
                 gsap.to(s.material, {
                     opacity: 0,
                     duration: 0.8,
@@ -1217,7 +714,7 @@
             if (!group) return;
             group.visible = true;
             const startRadius = 50; 
-
+            
             group.children.forEach((s, i) => {
                 const randomOffset = new THREE.Vector3(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5).normalize().multiplyScalar(startRadius);
                 const startPos = s.userData.originalPos.clone().add(randomOffset);
@@ -1232,7 +729,7 @@
                     ease: "power3.out",
                     delay: Math.random() * 0.3 
                 });
-
+                
                 gsap.to(s.material, {
                     opacity: 1,
                     duration: 1.5,
@@ -1247,9 +744,9 @@
                 const randomBoost = Math.PI + (Math.random() * Math.PI);
                 const tiltX = (Math.random() - 0.5) * 0.5; 
                 const tiltZ = (Math.random() - 0.5) * 0.3;
-
+                
                 gsap.to(currentGroup.rotation, { y: currentGroup.rotation.y + randomBoost, x: currentGroup.rotation.x + tiltX, z: tiltZ, duration: 3.5, ease: "power4.out" });
-
+                
                 const baseRotX = (currentGroup === heartGroup ? -Math.PI/2 : 0);
                 gsap.to(currentGroup.rotation, { x: baseRotX, z: 0, delay: 3.0, duration: 2, ease: "power2.inOut" });
 
@@ -1266,18 +763,18 @@
 
             function switchShape(name, group) {
                 if (currentGroup === group || isTransitioning) return;
-
+                
                 isTransitioning = true; 
 
                 explodeGroup(currentGroup);
-
+                
                 Object.values(btns).forEach(b => b.classList.remove('active'));
                 btns[name].classList.add('active');
 
                 setTimeout(() => {
                     implodeGroup(group);
                     currentGroup = group;
-
+                    
                     setTimeout(() => { isTransitioning = false; }, 1000);
 
                 }, 900); 
@@ -1292,7 +789,7 @@
         function setupInteraction() {
             const modal = document.getElementById('photo-modal');
             const modalImg = document.getElementById('modal-image');
-
+            
             function closeModal() {
                 modalImg.classList.remove('open');
                 setTimeout(() => { modal.style.display = 'none'; }, 500); 
