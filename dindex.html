@@ -104,7 +104,6 @@
             align-items: center;
             justify-content: center;
             font-family: 'Montserrat', sans-serif;
-            z-index: 100;
         }
 
         #game-close:hover {
@@ -120,7 +119,6 @@
             transform: translate(-50%, -50%);
             text-align: center;
             z-index: 2;
-            max-width: 90%;
         }
 
         .game-start-screen h2, .game-over-screen h2 {
@@ -150,7 +148,6 @@
             cursor: pointer;
             transition: all 0.3s;
             text-transform: uppercase;
-            margin: 5px;
         }
 
         .game-btn:hover {
@@ -159,138 +156,7 @@
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
         }
 
-        /* LEADERBOARD */
-        .leaderboard {
-            background: rgba(15, 15, 15, 0.95);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px auto;
-            max-width: 350px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
-        }
-
-        .leaderboard h3 {
-            font-family: 'Cinzel', serif;
-            color: var(--gold);
-            text-align: center;
-            font-size: 1.3rem;
-            margin-bottom: 20px;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-        }
-
-        .leaderboard-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 15px;
-            margin: 8px 0;
-            background: rgba(20, 20, 20, 0.6);
-            border-left: 3px solid transparent;
-            transition: all 0.3s;
-        }
-
-        .leaderboard-item:nth-child(2) {
-            background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), rgba(20, 20, 20, 0.6));
-            border-left-color: #FFD700;
-        }
-
-        .leaderboard-item:nth-child(3) {
-            background: linear-gradient(90deg, rgba(192, 192, 192, 0.15), rgba(20, 20, 20, 0.6));
-            border-left-color: #C0C0C0;
-        }
-
-        .leaderboard-item:nth-child(4) {
-            background: linear-gradient(90deg, rgba(205, 127, 50, 0.15), rgba(20, 20, 20, 0.6));
-            border-left-color: #CD7F32;
-        }
-
-        .rank-number {
-            font-family: 'Cinzel', serif;
-            color: var(--gold);
-            font-weight: 600;
-            font-size: 1.1rem;
-            min-width: 30px;
-        }
-
-        .player-name {
-            flex: 1;
-            color: #fff;
-            font-size: 0.95rem;
-            padding: 0 15px;
-            letter-spacing: 1px;
-        }
-
-        .player-score {
-            color: var(--gold-light);
-            font-family: 'Cinzel', serif;
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .name-input-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 10001;
-        }
-
-        .name-input-modal.active {
-            display: flex;
-        }
-
-        .name-input-content {
-            background: rgba(20, 20, 20, 0.98);
-            border: 2px solid var(--gold);
-            padding: 40px;
-            border-radius: 10px;
-            text-align: center;
-            max-width: 400px;
-            width: 80%;
-            box-shadow: 0 0 50px rgba(212, 175, 55, 0.3);
-        }
-
-        .name-input-content h3 {
-            font-family: 'Cinzel', serif;
-            color: var(--gold);
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            letter-spacing: 2px;
-        }
-
-        .name-input-content p {
-            color: #888;
-            margin-bottom: 25px;
-            font-size: 0.9rem;
-        }
-
-        .name-input-field {
-            width: 100%;
-            background: transparent;
-            border: none;
-            border-bottom: 2px solid rgba(212, 175, 55, 0.5);
-            color: white;
-            font-family: 'Montserrat', sans-serif;
-            font-size: 1.2rem;
-            text-align: center;
-            padding: 15px;
-            margin-bottom: 30px;
-            outline: none;
-            transition: border-color 0.3s;
-            letter-spacing: 2px;
-        }
-
-        .name-input-field:focus {
-            border-bottom-color: var(--gold);
-        }
-
+        /* --- LOGIN SCREEN --- */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-dark); z-index: 20000;
@@ -332,6 +198,7 @@
             transition: opacity 1.5s ease;
         }
 
+        /* --- SEZIONE 3D --- */
         .content-right {
             position: relative;
             width: 100%;
@@ -439,6 +306,7 @@
         button.active { color: var(--gold); text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
         button.active::after { width: 80%; }
 
+        /* GAME BUTTON */
         #btn-game {
             color: var(--gold);
             font-size: 1.2rem;
@@ -518,12 +386,7 @@
         }
         .loading-logo {
             font-family: 'Cinzel', serif; font-size: 3rem; color: var(--gold);
-            margin-bottom: 20px; letter-spacing: 5px; animation: pulseLogo 3s infinite;
-        }
-
-        @keyframes pulseLogo {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+            margin-bottom: 20px; letter-spacing: 5px; animation: pulse 3s infinite;
         }
 
         .loader-line {
@@ -578,43 +441,22 @@
 </head>
 <body>
 
-    <div class="name-input-modal" id="name-input-modal">
-        <div class="name-input-content">
-            <h3>🏆 TOP 8!</h3>
-            <p>Hai raggiunto la classifica!<br>Inserisci il tuo nome:</p>
-            <input type="text" id="player-name-input" class="name-input-field" maxlength="15" placeholder="Il tuo nome">
-            <button class="game-btn" id="submit-name-btn">SALVA</button>
-        </div>
-    </div>
-
+    <!-- GAME OVERLAY -->
     <div id="game-overlay">
         <button id="game-close">×</button>
         <div class="game-ui">
             <div id="score-display">0</div>
+            <div id="high-score-display">Best: 0</div>
         </div>
         <canvas id="game-canvas" width="400" height="600"></canvas>
-
         <div id="game-start-screen" class="game-start-screen">
             <h2>ETERNAL FLIGHT</h2>
-            <p>Tap o Spazio per volare<br>Evita gli ostacoli!</p>
-
-            <div class="leaderboard">
-                <h3>🏆 Classifica</h3>
-                <div id="leaderboard-list"></div>
-            </div>
-
+            <p>Tap o Spazio per far volare l'anello<br>Evita gli ostacoli!</p>
             <button class="game-btn" id="start-game-btn">INIZIA</button>
         </div>
-
         <div id="game-over-screen" class="game-over-screen" style="display:none;">
             <h2>GAME OVER</h2>
             <p id="final-score">Score: 0</p>
-
-            <div class="leaderboard">
-                <h3>🏆 Classifica</h3>
-                <div id="leaderboard-gameover"></div>
-            </div>
-
             <button class="game-btn" id="restart-game-btn">RIPROVA</button>
         </div>
     </div>
@@ -691,34 +533,6 @@
 
     </div>
 
-    <!-- Firebase SDK -->
-    <script type="module">
-        // IMPORTANTE: Sostituisci con la TUA configurazione Firebase!
-        // Vai su https://console.firebase.google.com/
-        // Crea un progetto > Aggiungi app web > Copia la config
-
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, set, get, query, orderByChild, limitToLast, push } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
-
-        // ⚠️ CONFIGURAZIONE FIREBASE - SOSTITUISCI CON LA TUA! ⚠️
-		const firebaseConfig = {
-  apiKey: "AIzaSyCWU2M2u-fHRWS6WMFidgKVfY6jTA2ZNXI",
-  authDomain: "test-7afd4.firebaseapp.com",
-  databaseURL: "https://test-7afd4-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "test-7afd4",
-  storageBucket: "test-7afd4.firebasestorage.app",
-  messagingSenderId: "913202667594",
-  appId: "1:913202667594:web:db96e60aabd381a4cd46b3",
-  measurementId: "G-5D29DD9FJN"
-};			
-
-        // Inizializza Firebase
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
-        window.firebaseDB = database; // Rendi accessibile globalmente
-    </script>
-
     <script type="importmap">
         {
             "imports": {
@@ -733,198 +547,46 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { gsap } from 'gsap';
-        import { ref, set, get, query, orderByChild, limitToLast, push, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
         // ===========================================
-        // LEADERBOARD MANAGER CON FIREBASE
-        // ===========================================
-
-        class LeaderboardManager {
-            constructor(database) {
-                this.db = database;
-                this.scores = [];
-                this.maxEntries = 8;
-                this.scoresRef = ref(this.db, 'leaderboard');
-            }
-
-            async loadScores() {
-                try {
-                    const scoresQuery = query(this.scoresRef, orderByChild('score'), limitToLast(this.maxEntries));
-                    const snapshot = await get(scoresQuery);
-
-                    this.scores = [];
-                    if (snapshot.exists()) {
-                        snapshot.forEach((childSnapshot) => {
-                            const data = childSnapshot.val();
-                            this.scores.push({
-                                nome: data.nome,
-                                score: data.score,
-                                id: childSnapshot.key
-                            });
-                        });
-                    } else {
-                        // Dati iniziali se database vuoto
-                        this.scores = [
-                            {nome: 'Jc.Ye', score: 121},
-                            {nome: 'caio', score: 21},
-                            {nome: 'rettore', score: 11},
-                            {nome: 'tizio', score: 8},
-                            {nome: 'ahha', score: 7},
-                            {nome: 'spiderman', score: 6},
-                            {nome: 'francesco', score: 5},
-                            {nome: 'davide', score: 4}
-                        ];
-                        // Inizializza Firebase con dati default
-                        await this.initializeDefaultScores();
-                    }
-
-                    this.sortScores();
-                } catch(error) {
-                    console.error('Errore caricamento scores:', error);
-                    // Fallback locale
-                    this.scores = [
-                        {nome: 'Jc.Ye', score: 121},
-                        {nome: 'caio', score: 21},
-                        {nome: 'rettore', score: 11}
-                    ];
-                }
-            }
-
-            async initializeDefaultScores() {
-                for (const score of this.scores) {
-                    const newScoreRef = push(this.scoresRef);
-                    await set(newScoreRef, {
-                        nome: score.nome,
-                        score: score.score,
-                        timestamp: Date.now()
-                    });
-                }
-            }
-
-            sortScores() {
-                this.scores.sort((a, b) => b.score - a.score);
-                this.scores = this.scores.slice(0, this.maxEntries);
-            }
-
-            isTopScore(score) {
-                if(this.scores.length < this.maxEntries) return true;
-                return score > this.scores[this.scores.length - 1].score;
-            }
-
-            async addScore(nome, score) {
-                try {
-                    const newScoreRef = push(this.scoresRef);
-                    await set(newScoreRef, {
-                        nome: nome,
-                        score: score,
-                        timestamp: Date.now()
-                    });
-
-                    // Ricarica per aggiornare classifica
-                    await this.loadScores();
-
-                    // Se ci sono più di 8, elimina il peggiore
-                    await this.cleanupOldScores();
-
-                } catch(error) {
-                    console.error('Errore salvataggio score:', error);
-                }
-            }
-
-            async cleanupOldScores() {
-                try {
-                    const snapshot = await get(this.scoresRef);
-                    if (!snapshot.exists()) return;
-
-                    const allScores = [];
-                    snapshot.forEach((child) => {
-                        allScores.push({
-                            key: child.key,
-                            score: child.val().score
-                        });
-                    });
-
-                    allScores.sort((a, b) => b.score - a.score);
-
-                    // Elimina oltre l'8°
-                    if (allScores.length > this.maxEntries) {
-                        for (let i = this.maxEntries; i < allScores.length; i++) {
-                            const deleteRef = ref(this.db, `leaderboard/${allScores[i].key}`);
-                            await set(deleteRef, null);
-                        }
-                    }
-                } catch(error) {
-                    console.error('Errore cleanup scores:', error);
-                }
-            }
-
-            setupRealTimeListener(callback) {
-                onValue(this.scoresRef, async (snapshot) => {
-                    await this.loadScores();
-                    if (callback) callback();
-                });
-            }
-
-            renderLeaderboard(containerId) {
-                const container = document.getElementById(containerId);
-                if(!container) return;
-
-                container.innerHTML = '';
-
-                this.scores.forEach((entry, index) => {
-                    const item = document.createElement('div');
-                    item.className = 'leaderboard-item';
-
-                    let medal = '';
-                    if(index === 0) medal = '🥇';
-                    else if(index === 1) medal = '🥈';
-                    else if(index === 2) medal = '🥉';
-
-                    item.innerHTML = `
-                        <span class="rank-number">${medal || (index + 1)}</span>
-                        <span class="player-name">${entry.nome}</span>
-                        <span class="player-score">${entry.score}</span>
-                    `;
-
-                    container.appendChild(item);
-                });
-            }
-        }
-
-        // ===========================================
-        // GAME LOGIC
+        // GAME LOGIC - "ETERNAL FLIGHT"
         // ===========================================
 
         class EternalFlightGame {
-            constructor(leaderboard) {
+            constructor() {
                 this.canvas = document.getElementById('game-canvas');
                 this.ctx = this.canvas.getContext('2d');
                 this.width = 400;
                 this.height = 600;
-                this.gameState = 'start';
-                this.leaderboard = leaderboard;
+                this.gameState = 'start'; // start, playing, gameover
 
+                // Player (Ring)
                 this.ring = {
                     x: 80,
                     y: this.height / 2,
                     radius: 20,
                     velocity: 0,
-                    gravity: 0.4,
-                    jump: -7.5
+                    gravity: 0.5,
+                    jump: -9
                 };
 
+                // Obstacles
                 this.obstacles = [];
                 this.obstacleWidth = 60;
-                this.obstacleGap = 200;
-                this.baseSpeed = 1.5;
-                this.obstacleSpeed = this.baseSpeed;
+                this.obstacleGap = 180;
+                this.obstacleSpeed = 2.5;
                 this.frameCount = 0;
-                this.spawnInterval = 110;
+                this.spawnInterval = 90;
 
+                // Score
                 this.score = 0;
+                this.highScore = localStorage.getItem('eternalFlightHighScore') || 0;
+
+                // Particles
                 this.particles = [];
 
                 this.setupEventListeners();
+                this.updateHighScoreDisplay();
             }
 
             setupEventListeners() {
@@ -964,7 +626,6 @@
                 this.particles = [];
                 this.score = 0;
                 this.frameCount = 0;
-                this.obstacleSpeed = this.baseSpeed;
                 this.updateScoreDisplay();
                 this.hideStartScreen();
                 this.hideGameOverScreen();
@@ -983,31 +644,32 @@
             update() {
                 this.frameCount++;
 
+                // Update ring
                 this.ring.velocity += this.ring.gravity;
                 this.ring.y += this.ring.velocity;
 
+                // Spawn obstacles
                 if(this.frameCount % this.spawnInterval === 0) {
                     this.spawnObstacle();
                 }
 
+                // Update obstacles
                 this.obstacles.forEach(obs => {
                     obs.x -= this.obstacleSpeed;
 
+                    // Score point
                     if(!obs.scored && obs.x + this.obstacleWidth < this.ring.x) {
                         obs.scored = true;
                         this.score++;
                         this.updateScoreDisplay();
                         this.createParticles(this.ring.x, this.ring.y, 8);
-
-                        if(this.score > 5) {
-                            const increment = 0.08;
-                            this.obstacleSpeed = Math.min(3.5, this.baseSpeed + ((this.score - 5) * increment));
-                        }
                     }
                 });
 
+                // Remove off-screen obstacles
                 this.obstacles = this.obstacles.filter(obs => obs.x > -this.obstacleWidth);
 
+                // Update particles
                 this.particles.forEach(p => {
                     p.x += p.vx;
                     p.y += p.vy;
@@ -1015,18 +677,32 @@
                 });
                 this.particles = this.particles.filter(p => p.life > 0);
 
+                // Check collisions
                 if(this.checkCollision()) {
                     this.gameOver();
+                }
+
+                // Increase difficulty
+                if(this.score > 0 && this.score % 10 === 0) {
+                    this.obstacleSpeed = Math.min(4.5, 2.5 + (this.score / 20));
                 }
             }
 
             draw() {
+                // Clear canvas
                 this.ctx.fillStyle = '#0a0a0a';
                 this.ctx.fillRect(0, 0, this.width, this.height);
 
+                // Draw subtle grid
                 this.drawGrid();
+
+                // Draw obstacles
                 this.obstacles.forEach(obs => this.drawObstacle(obs));
+
+                // Draw particles
                 this.particles.forEach(p => this.drawParticle(p));
+
+                // Draw ring
                 this.drawRing();
             }
 
@@ -1047,24 +723,28 @@
                 const y = this.ring.y;
                 const r = this.ring.radius;
 
+                // Outer glow
                 const gradient = this.ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 2);
                 gradient.addColorStop(0, 'rgba(212, 175, 55, 0.3)');
                 gradient.addColorStop(1, 'rgba(212, 175, 55, 0)');
                 this.ctx.fillStyle = gradient;
                 this.ctx.fillRect(x - r * 2, y - r * 2, r * 4, r * 4);
 
+                // Ring
                 this.ctx.strokeStyle = '#D4AF37';
                 this.ctx.lineWidth = 4;
                 this.ctx.beginPath();
                 this.ctx.arc(x, y, r, 0, Math.PI * 2);
                 this.ctx.stroke();
 
+                // Inner ring
                 this.ctx.strokeStyle = '#F3E5AB';
                 this.ctx.lineWidth = 2;
                 this.ctx.beginPath();
                 this.ctx.arc(x, y, r * 0.6, 0, Math.PI * 2);
                 this.ctx.stroke();
 
+                // Diamond on ring
                 this.ctx.save();
                 this.ctx.translate(x, y - r);
                 this.ctx.fillStyle = '#fff';
@@ -1086,15 +766,19 @@
                 goldGradient.addColorStop(0.5, 'rgba(150, 150, 150, 0.9)');
                 goldGradient.addColorStop(1, 'rgba(100, 100, 100, 0.8)');
 
+                // Top obstacle (Champagne bottle)
                 this.ctx.fillStyle = goldGradient;
                 this.ctx.fillRect(obs.x, 0, this.obstacleWidth, obs.topHeight);
 
+                // Bottle neck
                 this.ctx.fillStyle = 'rgba(212, 175, 55, 0.6)';
                 this.ctx.fillRect(obs.x + 15, obs.topHeight - 30, 30, 30);
 
+                // Bottom obstacle (Wedding cake)
                 this.ctx.fillStyle = goldGradient;
                 this.ctx.fillRect(obs.x, obs.bottomY, this.obstacleWidth, this.height - obs.bottomY);
 
+                // Cake layers
                 this.ctx.strokeStyle = 'rgba(212, 175, 55, 0.4)';
                 this.ctx.lineWidth = 2;
                 for(let i = 0; i < 3; i++) {
@@ -1105,6 +789,7 @@
                     this.ctx.stroke();
                 }
 
+                // Border glow
                 this.ctx.strokeStyle = 'rgba(212, 175, 55, 0.3)';
                 this.ctx.lineWidth = 2;
                 this.ctx.strokeRect(obs.x, 0, this.obstacleWidth, obs.topHeight);
@@ -1125,10 +810,12 @@
             }
 
             checkCollision() {
+                // Floor and ceiling
                 if(this.ring.y - this.ring.radius < 0 || this.ring.y + this.ring.radius > this.height) {
                     return true;
                 }
 
+                // Obstacles
                 for(let obs of this.obstacles) {
                     if(this.ring.x + this.ring.radius > obs.x && 
                        this.ring.x - this.ring.radius < obs.x + this.obstacleWidth) {
@@ -1166,33 +853,26 @@
                 this.ctx.fill();
             }
 
-            async gameOver() {
+            gameOver() {
                 this.gameState = 'gameover';
-                this.createParticles(this.ring.x, this.ring.y, 30);
-
-                if(this.leaderboard.isTopScore(this.score)) {
-                    this.showNameInput();
-                } else {
-                    this.showGameOverScreen();
-                }
-            }
-
-            showNameInput() {
-                const modal = document.getElementById('name-input-modal');
-                const input = document.getElementById('player-name-input');
-                input.value = '';
-                modal.classList.add('active');
-
-                setTimeout(() => input.focus(), 300);
-            }
-
-            async submitScore(playerName) {
-                await this.leaderboard.addScore(playerName, this.score);
                 this.showGameOverScreen();
+
+                if(this.score > this.highScore) {
+                    this.highScore = this.score;
+                    localStorage.setItem('eternalFlightHighScore', this.highScore);
+                    this.updateHighScoreDisplay();
+                }
+
+                // Explosion particles
+                this.createParticles(this.ring.x, this.ring.y, 30);
             }
 
             updateScoreDisplay() {
                 document.getElementById('score-display').textContent = this.score;
+            }
+
+            updateHighScoreDisplay() {
+                document.getElementById('high-score-display').textContent = `Best: ${this.highScore}`;
             }
 
             hideStartScreen() {
@@ -1210,35 +890,13 @@
             }
         }
 
-        // ===========================================
-        // GAME INITIALIZATION
-        // ===========================================
-
+        // Initialize game
         let game = null;
-        let leaderboard = null;
-
-        // Inizializza leaderboard con Firebase
-        if (window.firebaseDB) {
-            leaderboard = new LeaderboardManager(window.firebaseDB);
-
-            leaderboard.loadScores().then(() => {
-                leaderboard.renderLeaderboard('leaderboard-list');
-
-                // Setup real-time updates
-                leaderboard.setupRealTimeListener(() => {
-                    leaderboard.renderLeaderboard('leaderboard-list');
-                    leaderboard.renderLeaderboard('leaderboard-gameover');
-                });
-            });
-        }
 
         document.getElementById('btn-game').addEventListener('click', () => {
             document.getElementById('game-overlay').classList.add('active');
-            if(!game && leaderboard) {
-                game = new EternalFlightGame(leaderboard);
-            }
-            if(leaderboard) {
-                leaderboard.renderLeaderboard('leaderboard-list');
+            if(!game) {
+                game = new EternalFlightGame();
             }
         });
 
@@ -1259,29 +917,8 @@
             if(game) game.start();
         });
 
-        document.getElementById('submit-name-btn').addEventListener('click', async () => {
-            const nameInput = document.getElementById('player-name-input');
-            const playerName = nameInput.value.trim();
-
-            if(playerName.length > 0) {
-                document.getElementById('name-input-modal').classList.remove('active');
-                await game.submitScore(playerName);
-            } else {
-                nameInput.style.borderBottomColor = '#ff4444';
-                setTimeout(() => {
-                    nameInput.style.borderBottomColor = '';
-                }, 500);
-            }
-        });
-
-        document.getElementById('player-name-input').addEventListener('keypress', (e) => {
-            if(e.key === 'Enter') {
-                document.getElementById('submit-name-btn').click();
-            }
-        });
-
         // ===========================================
-        // RESTO DEL CODICE 3D (invariato)
+        // ORIGINAL 3D APP LOGIC
         // ===========================================
 
         async function sha256(message) {
