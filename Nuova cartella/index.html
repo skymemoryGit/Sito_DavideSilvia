@@ -191,17 +191,17 @@
             transition: all 0.3s;
         }
 
-        .leaderboard-item:nth-child(2) { /* 1st place */
+        .leaderboard-item:nth-child(2) {
             background: linear-gradient(90deg, rgba(255, 215, 0, 0.15), rgba(20, 20, 20, 0.6));
             border-left-color: #FFD700;
         }
 
-        .leaderboard-item:nth-child(3) { /* 2nd place */
+        .leaderboard-item:nth-child(3) {
             background: linear-gradient(90deg, rgba(192, 192, 192, 0.15), rgba(20, 20, 20, 0.6));
             border-left-color: #C0C0C0;
         }
 
-        .leaderboard-item:nth-child(4) { /* 3rd place */
+        .leaderboard-item:nth-child(4) {
             background: linear-gradient(90deg, rgba(205, 127, 50, 0.15), rgba(20, 20, 20, 0.6));
             border-left-color: #CD7F32;
         }
@@ -229,7 +229,6 @@
             font-weight: 600;
         }
 
-        /* NAME INPUT MODAL */
         .name-input-modal {
             position: fixed;
             top: 0;
@@ -292,7 +291,6 @@
             border-bottom-color: var(--gold);
         }
 
-        /* --- LOGIN SCREEN --- */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-dark); z-index: 20000;
@@ -334,7 +332,6 @@
             transition: opacity 1.5s ease;
         }
 
-        /* --- SEZIONE 3D --- */
         .content-right {
             position: relative;
             width: 100%;
@@ -581,7 +578,6 @@
 </head>
 <body>
 
-    <!-- NAME INPUT MODAL -->
     <div class="name-input-modal" id="name-input-modal">
         <div class="name-input-content">
             <h3>🏆 TOP 8!</h3>
@@ -591,7 +587,6 @@
         </div>
     </div>
 
-    <!-- GAME OVERLAY -->
     <div id="game-overlay">
         <button id="game-close">×</button>
         <div class="game-ui">
@@ -696,6 +691,34 @@
 
     </div>
 
+    <!-- Firebase SDK -->
+    <script type="module">
+        // IMPORTANTE: Sostituisci con la TUA configurazione Firebase!
+        // Vai su https://console.firebase.google.com/
+        // Crea un progetto > Aggiungi app web > Copia la config
+
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, query, orderByChild, limitToLast, push } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        // ⚠️ CONFIGURAZIONE FIREBASE - SOSTITUISCI CON LA TUA! ⚠️
+		const firebaseConfig = {
+  apiKey: "AIzaSyCWU2M2u-fHRWS6WMFidgKVfY6jTA2ZNXI",
+  authDomain: "test-7afd4.firebaseapp.com",
+  databaseURL: "https://test-7afd4-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "test-7afd4",
+  storageBucket: "test-7afd4.firebasestorage.app",
+  messagingSenderId: "913202667594",
+  appId: "1:913202667594:web:db96e60aabd381a4cd46b3",
+  measurementId: "G-5D29DD9FJN"
+};			
+
+        // Inizializza Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        window.firebaseDB = database; // Rendi accessibile globalmente
+    </script>
+
     <script type="importmap">
         {
             "imports": {
@@ -710,38 +733,72 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
         import { gsap } from 'gsap';
+        import { ref, set, get, query, orderByChild, limitToLast, push, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
 
         // ===========================================
-        // LEADERBOARD MANAGER
+        // LEADERBOARD MANAGER CON FIREBASE
         // ===========================================
 
         class LeaderboardManager {
-            constructor() {
+            constructor(database) {
+                this.db = database;
                 this.scores = [];
                 this.maxEntries = 8;
+                this.scoresRef = ref(this.db, 'leaderboard');
             }
 
             async loadScores() {
                 try {
-                    const response = await fetch('api.php?action=get');
-                    const data = await response.json();
-                    if(data.success) {
-                        this.scores = data.scores;
+                    const scoresQuery = query(this.scoresRef, orderByChild('score'), limitToLast(this.maxEntries));
+                    const snapshot = await get(scoresQuery);
+
+                    this.scores = [];
+                    if (snapshot.exists()) {
+                        snapshot.forEach((childSnapshot) => {
+                            const data = childSnapshot.val();
+                            this.scores.push({
+                                nome: data.nome,
+                                score: data.score,
+                                id: childSnapshot.key
+                            });
+                        });
+                    } else {
+                        // Dati iniziali se database vuoto
+                        this.scores = [
+                            {nome: 'Jc.Ye', score: 121},
+                            {nome: 'caio', score: 21},
+                            {nome: 'rettore', score: 11},
+                            {nome: 'tizio', score: 8},
+                            {nome: 'ahha', score: 7},
+                            {nome: 'spiderman', score: 6},
+                            {nome: 'francesco', score: 5},
+                            {nome: 'davide', score: 4}
+                        ];
+                        // Inizializza Firebase con dati default
+                        await this.initializeDefaultScores();
                     }
+
+                    this.sortScores();
                 } catch(error) {
-                    console.log('Caricamento scores da CSV fallito, uso dati di default');
+                    console.error('Errore caricamento scores:', error);
+                    // Fallback locale
                     this.scores = [
                         {nome: 'Jc.Ye', score: 121},
                         {nome: 'caio', score: 21},
-                        {nome: 'rettore', score: 11},
-                        {nome: 'tizio', score: 8},
-                        {nome: 'ahha', score: 7},
-                        {nome: 'spiderman', score: 6},
-                        {nome: 'francesco', score: 5},
-                        {nome: 'davide', score: 4}
+                        {nome: 'rettore', score: 11}
                     ];
                 }
-                this.sortScores();
+            }
+
+            async initializeDefaultScores() {
+                for (const score of this.scores) {
+                    const newScoreRef = push(this.scoresRef);
+                    await set(newScoreRef, {
+                        nome: score.nome,
+                        score: score.score,
+                        timestamp: Date.now()
+                    });
+                }
             }
 
             sortScores() {
@@ -755,18 +812,57 @@
             }
 
             async addScore(nome, score) {
-                this.scores.push({nome, score});
-                this.sortScores();
-
                 try {
-                    await fetch('api.php?action=save', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({scores: this.scores})
+                    const newScoreRef = push(this.scoresRef);
+                    await set(newScoreRef, {
+                        nome: nome,
+                        score: score,
+                        timestamp: Date.now()
                     });
+
+                    // Ricarica per aggiornare classifica
+                    await this.loadScores();
+
+                    // Se ci sono più di 8, elimina il peggiore
+                    await this.cleanupOldScores();
+
                 } catch(error) {
-                    console.log('Salvataggio su CSV fallito');
+                    console.error('Errore salvataggio score:', error);
                 }
+            }
+
+            async cleanupOldScores() {
+                try {
+                    const snapshot = await get(this.scoresRef);
+                    if (!snapshot.exists()) return;
+
+                    const allScores = [];
+                    snapshot.forEach((child) => {
+                        allScores.push({
+                            key: child.key,
+                            score: child.val().score
+                        });
+                    });
+
+                    allScores.sort((a, b) => b.score - a.score);
+
+                    // Elimina oltre l'8°
+                    if (allScores.length > this.maxEntries) {
+                        for (let i = this.maxEntries; i < allScores.length; i++) {
+                            const deleteRef = ref(this.db, `leaderboard/${allScores[i].key}`);
+                            await set(deleteRef, null);
+                        }
+                    }
+                } catch(error) {
+                    console.error('Errore cleanup scores:', error);
+                }
+            }
+
+            setupRealTimeListener(callback) {
+                onValue(this.scoresRef, async (snapshot) => {
+                    await this.loadScores();
+                    if (callback) callback();
+                });
             }
 
             renderLeaderboard(containerId) {
@@ -796,7 +892,7 @@
         }
 
         // ===========================================
-        // GAME LOGIC - "ETERNAL FLIGHT"
+        // GAME LOGIC
         // ===========================================
 
         class EternalFlightGame {
@@ -813,17 +909,17 @@
                     y: this.height / 2,
                     radius: 20,
                     velocity: 0,
-                    gravity: 0.4,  // Ridotto da 0.5
-                    jump: -7.5     // Ridotto da -9
+                    gravity: 0.4,
+                    jump: -7.5
                 };
 
                 this.obstacles = [];
                 this.obstacleWidth = 60;
-                this.obstacleGap = 200;  // Aumentato da 180
-                this.baseSpeed = 1.5;    // Velocità iniziale più lenta (era 2.5)
+                this.obstacleGap = 200;
+                this.baseSpeed = 1.5;
                 this.obstacleSpeed = this.baseSpeed;
                 this.frameCount = 0;
-                this.spawnInterval = 110;  // Aumentato da 90 (spawn meno frequente)
+                this.spawnInterval = 110;
 
                 this.score = 0;
                 this.particles = [];
@@ -868,7 +964,7 @@
                 this.particles = [];
                 this.score = 0;
                 this.frameCount = 0;
-                this.obstacleSpeed = this.baseSpeed;  // Reset velocità
+                this.obstacleSpeed = this.baseSpeed;
                 this.updateScoreDisplay();
                 this.hideStartScreen();
                 this.hideGameOverScreen();
@@ -903,9 +999,8 @@
                         this.updateScoreDisplay();
                         this.createParticles(this.ring.x, this.ring.y, 8);
 
-                        // Aumenta difficoltà GRADUALMENTE dopo 5 punti
                         if(this.score > 5) {
-                            const increment = 0.08;  // Molto graduale
+                            const increment = 0.08;
                             this.obstacleSpeed = Math.min(3.5, this.baseSpeed + ((this.score - 5) * increment));
                         }
                     }
@@ -1075,7 +1170,6 @@
                 this.gameState = 'gameover';
                 this.createParticles(this.ring.x, this.ring.y, 30);
 
-                // Controlla se è top score
                 if(this.leaderboard.isTopScore(this.score)) {
                     this.showNameInput();
                 } else {
@@ -1094,8 +1188,6 @@
 
             async submitScore(playerName) {
                 await this.leaderboard.addScore(playerName, this.score);
-                this.leaderboard.renderLeaderboard('leaderboard-list');
-                this.leaderboard.renderLeaderboard('leaderboard-gameover');
                 this.showGameOverScreen();
             }
 
@@ -1123,19 +1215,31 @@
         // ===========================================
 
         let game = null;
-        const leaderboard = new LeaderboardManager();
+        let leaderboard = null;
 
-        // Load leaderboard on page load
-        leaderboard.loadScores().then(() => {
-            leaderboard.renderLeaderboard('leaderboard-list');
-        });
+        // Inizializza leaderboard con Firebase
+        if (window.firebaseDB) {
+            leaderboard = new LeaderboardManager(window.firebaseDB);
+
+            leaderboard.loadScores().then(() => {
+                leaderboard.renderLeaderboard('leaderboard-list');
+
+                // Setup real-time updates
+                leaderboard.setupRealTimeListener(() => {
+                    leaderboard.renderLeaderboard('leaderboard-list');
+                    leaderboard.renderLeaderboard('leaderboard-gameover');
+                });
+            });
+        }
 
         document.getElementById('btn-game').addEventListener('click', () => {
             document.getElementById('game-overlay').classList.add('active');
-            if(!game) {
+            if(!game && leaderboard) {
                 game = new EternalFlightGame(leaderboard);
             }
-            leaderboard.renderLeaderboard('leaderboard-list');
+            if(leaderboard) {
+                leaderboard.renderLeaderboard('leaderboard-list');
+            }
         });
 
         document.getElementById('game-close').addEventListener('click', () => {
@@ -1177,7 +1281,7 @@
         });
 
         // ===========================================
-        // ORIGINAL 3D APP LOGIC
+        // RESTO DEL CODICE 3D (invariato)
         // ===========================================
 
         async function sha256(message) {
