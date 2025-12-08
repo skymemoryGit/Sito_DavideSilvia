@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Eternal Flight - Flappy Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --gold: #D4AF37;
+            --gold-light: #F3E5AB;
+            --bg-dark: #080808;
+        }
+
+        body {
+            background: var(--bg-dark);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+            overflow: hidden;
+        }
+
+        #game-container {
+            position: relative;
+            max-width: 400px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        #game-canvas {
+            display: block;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.2);
+            background: linear-gradient(to bottom, #0a0a0a, #050505);
+            width: 100%;
+            height: auto;
+            touch-action: none;
+        }
+
+        .game-ui {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            padding: 0 30px;
+            font-size: 2rem;
+            font-weight: bold;
+            letter-spacing: 3px;
+            color: var(--gold);
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.8), 0 0 30px rgba(212, 175, 55, 0.4);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .game-screen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 20;
+            background: rgba(8, 8, 8, 0.98);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .game-screen h2 {
+            font-size: 2.5rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+            letter-spacing: 4px;
+            text-shadow: 0 0 25px rgba(212, 175, 55, 0.6);
+        }
+
+        .game-screen p {
+            color: #888;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .easter-egg-message {
+            color: var(--gold);
+            font-size: 0.9rem;
+            font-style: italic;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(212, 175, 55, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .joke-message-gameover {
+            color: #ff69b4;
+            font-size: 0.95rem;
+            font-style: italic;
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(255, 105, 180, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 105, 180, 0.3);
+            line-height: 1.5;
+        }
+
+        .game-btn {
+            background: rgba(212, 175, 55, 0.15);
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            margin: 10px 5px;
+            border-radius: 5px;
+        }
+
+        .game-btn:hover {
+            background: var(--gold);
+            color: #000;
+            box-shadow: 0 0 25px rgba(212, 175, 55, 0.8);
+            transform: translateY(-2px);
+        }
+
+        .game-btn:active {
+            transform: translateY(0);
+        }
+
+        .leaderboard {
+            background: rgba(15, 15, 15, 0.95);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            max-width: 350px;
+        }
+
+        .leaderboard h3 {
+            color: var(--gold);
+            text-align: center;
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: rgba(20, 20, 20, 0.6);
+            border-left: 3px solid transparent;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+
+        .leaderboard-item:hover {
+            background: rgba(30, 30, 30, 0.8);
+            transform: translateX(5px);
+        }
+
+        .leaderboard-item:nth-child(1) {
+            background: linear-gradient(90deg, rgba(255, 215, 0, 0.2), rgba(20, 20, 20, 0.6));
+            border-left-color: #FFD700;
+        }
+
+        .leaderboard-item:nth-child(2) {
+            background: linear-gradient(90deg, rgba(192, 192, 192, 0.2), rgba(20, 20, 20, 0.6));
+            border-left-color: #C0C0C0;
+        }
+
+        .leaderboard-item:nth-child(3) {
+            background: linear-gradient(90deg, rgba(205, 127, 50, 0.2), rgba(20, 20, 20, 0.6));
+            border-left-color: #CD7F32;
+        }
+
+        .rank-number {
+            color: var(--gold);
+            font-weight: 700;
+            font-size: 1.2rem;
+            min-width: 40px;
+        }
+
+        .player-name {
+            flex: 1;
+            padding: 0 15px;
+            text-align: left;
+            font-size: 1rem;
+        }
+
+        .player-score {
+            color: var(--gold-light);
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .name-input-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+        }
+
+        .name-input-modal.active {
+            display: flex;
+        }
+
+        .name-input-content {
+            background: rgba(20, 20, 20, 0.98);
+            border: 2px solid var(--gold);
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.4);
+        }
+
+        .name-input-content h3 {
+            color: var(--gold);
+            font-size: 2rem;
+            margin-bottom: 15px;
+        }
+
+        .name-input-field {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.5);
+            color: white;
+            font-size: 1.3rem;
+            text-align: center;
+            padding: 15px;
+            margin-bottom: 30px;
+            outline: none;
+            transition: border-color 0.3s;
+            letter-spacing: 2px;
+        }
+
+        .name-input-field:focus {
+            border-bottom-color: var(--gold);
+        }
+
+        .rank-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 150;
+            backdrop-filter: blur(15px);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .rank-modal.active {
+            display: flex;
+        }
+
+        .rank-modal-content {
+            background: rgba(20, 20, 20, 0.98);
+            border: 3px solid var(--gold);
+            padding: 50px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 0 80px rgba(212, 175, 55, 0.6);
+            animation: scaleIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .rank-modal-content h2 {
+            font-size: 3rem;
+            color: var(--gold);
+            margin-bottom: 20px;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.8);
+        }
+
+        .rank-modal-content .rank-message {
+            font-size: 1.8rem;
+            color: #fff;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .rank-modal-content .joke-message {
+            font-size: 1.1rem;
+            color: #ff69b4;
+            margin-bottom: 30px;
+            font-style: italic;
+            line-height: 1.6;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+            from { 
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            to { 
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #game-start-screen, #game-over-screen {
+            display: none;
+        }
+
+        @media (max-width: 480px) {
+            .game-screen h2 {
+                font-size: 1.8rem;
+            }
+            
+            .game-ui {
+                font-size: 1.5rem;
+            }
+            
+            .leaderboard {
+                padding: 15px;
+            }
+
+            .rank-modal-content {
+                padding: 30px;
+            }
+
+            .rank-modal-content h2 {
+                font-size: 2rem;
+            }
+
+            .rank-modal-content .rank-message {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="name-input-modal" id="name-input-modal">
+        <div class="name-input-content">
+            <h3>🏆 TOP 8!</h3>
+            <p>Hai raggiunto la classifica!<br>Inserisci il tuo nome</p>
+            <input type="text" id="player-name-input" class="name-input-field" maxlength="15" placeholder="Il tuo nome" autocomplete="off">
+            <button class="game-btn" id="submit-name-btn">SALVA</button>
+        </div>
+    </div>
+
+    <div class="rank-modal" id="rank-modal">
+        <div class="rank-modal-content">
+            <h2 id="rank-emoji">🏆</h2>
+            <div class="rank-message" id="rank-message"></div>
+            <div class="joke-message" id="joke-message"></div>
+            <button class="game-btn" id="rank-ok-btn">CONTINUA</button>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div class="game-ui">
+            <div id="score-display">0</div>
+        </div>
+        
+        <canvas id="game-canvas" width="400" height="600"></canvas>
+
+        <div id="game-start-screen" class="game-screen">
+            <h2>ETERNAL FLIGHT</h2>
+            <p>👆 Tap, Click o Spazio per volare<br>🎯 Evita gli ostacoli!</p>
+            <div class="leaderboard">
+                <h3>🏆 Classifica Mondiale</h3>
+                <div id="leaderboard-list"></div>
+            </div>
+            <button class="game-btn" id="start-game-btn">▶ INIZIA</button>
+        </div>
+
+        <div id="game-over-screen" class="game-screen">
+            <h2>GAME OVER</h2>
+            <p id="final-score">Punteggio: 0</p>
+            <div id="easter-egg-container"></div>
+            <div id="joke-container"></div>
+            <div class="leaderboard">
+                <h3>🏆 Classifica Mondiale</h3>
+                <div id="leaderboard-gameover"></div>
+            </div>
+            <button class="game-btn" id="restart-game-btn">🔄 RIPROVA</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getDatabase, ref, set, get, query, orderByChild, limitToLast, push, onValue } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCWU2M2u-fHRWS6WMFidgKVfY6jTA2ZNXI",
+            authDomain: "test-7afd4.firebaseapp.com",
+            databaseURL: "https://test-7afd4-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "test-7afd4",
+            storageBucket: "test-7afd4.firebasestorage.app",
+            messagingSenderId: "913202667594",
+            appId: "1:913202667594:web:db96e60aabd381a4cd46b3",
+            measurementId: "G-5D29DD9FJN"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // ============================================
+        // FRASI DAVIDE & SILVIA
+        // ============================================
+        const JOKES_ABITO = [
+            "Davide pensava fosse gratis... Come no! 💸",
+            "Come l'abito dello sposo: mai gratis! 😂",
+            "L'abito di Davide? Solo l'amore di Silvia è gratis! ❤️",
+            "Sorpresa Davide: l'abito si paga! 🤵💰",
+            "Tanto il vestito di Davide è gratis... PSYCH! 😅",
+            "L'unica cosa gratis? L'amore di Silvia! 💕",
+            "Spoiler: anche l'abito costa! 🤵💸",
+            "Davide: 'È gratis?' | Realtà: NO! 😂"
+        ];
+
+        const JOKES_STORIA = [
+            "Dal 18 novembre 2018 insieme... e ancora si amano! 💕",
+            "6 anni di avventure... e un abito da pagare! ✈️💸",
+            "Home Sweet Home dal 22 marzo 2023 🏠",
+            "8 gennaio: il loro giorno speciale ❤️",
+            "5 anni (e oltre) di amore... l'abito invece... 💰",
+            "Dal primo like Instagram al matrimonio! 📱❤️"
+        ];
+
+        const JOKES_VIAGGI = [
+            "Da Maiorca a Salento... ma l'abito non è in offerta! 🏖️",
+            "Hanno girato l'Italia, ma il vestito resta caro! 🗺️",
+            "Bergamo, Torino, Venezia... e un abito da pagare! ✈️",
+            "Puglia, Sardegna, Bibione... budget finito sull'abito! 😅",
+            "Verona, sushi e matrimonio... tutto ha un prezzo! 🍣💰"
+        ];
+
+        const JOKES_TOP8 = [
+            "Come Davide con Silvia: destinati alla gloria! (L'abito? Mai gratis!)",
+            "6 anni insieme, Top 8 raggiunta... l'abito si paga!",
+            "Campione! Come l'amore D❤️S... eterno! (L'abito no: €€€)",
+            "Sul podio! Davide e Silvia approvano! 🤵👰",
+            "Top 3! Come le loro vacanze: indimenticabile! ✈️",
+            "Top 8! Davide: 'Pure qui devo pagare?' 😂"
+        ];
+
+        // EASTER EGGS SCORE
+        const SCORE_EASTER_EGGS = {
+            8: "8 come l'8 gennaio, il loro anniversario! ❤️",
+            7: "Ah peccato! Quasi 8 come l'8 gennaio... ci sei vicino! 💔",
+            9: "Hai superato l'8! Come Davide dopo l'8 gennaio: sempre più forte! 🚀",
+            22: "22 come il 22 marzo, la loro casa! 🏠",
+            21: "Quasi 22! A un passo dalla casa di D❤️S! 🏠",
+            23: "Hai superato il 22! Meglio del loro trasloco! 😄",
+            18: "18 come il 18 novembre 2018, il primo incontro! 💕",
+            17: "Quasi 18! Manca poco al loro primo incontro! 📱",
+            19: "Hai superato il 18! Più punti del loro primo appuntamento! 🎉",
+            26: "26 come il 26 insieme a te! 🩷"
+        };
+
+        function getGameOverMessage(score) {
+            if (score < 5) return null;
+            if (Math.random() > 0.33) return null;
+            
+            const allJokes = [...JOKES_ABITO, ...JOKES_STORIA, ...JOKES_VIAGGI];
+            return allJokes[Math.floor(Math.random() * allJokes.length)];
+        }
+
+        function getTop8Message(rank) {
+            const rankMessages = {
+                1: "🥇 INCREDIBILE! SEI IL CAMPIONE! 👑",
+                2: "🥈 FANTASTICO! Secondo posto!",
+                3: "🥉 OTTIMO! Podio conquistato!"
+            };
+            
+            const message = rankMessages[rank] || `🏆 Complimenti! Ti sei piazzato al ${rank}° posto!`;
+            const joke = JOKES_TOP8[Math.floor(Math.random() * JOKES_TOP8.length)];
+            
+            return { message, joke };
+        }
+
+        function getScoreEasterEgg(score) {
+            if (SCORE_EASTER_EGGS[score]) {
+                return SCORE_EASTER_EGGS[score];
+            }
+            
+            if (score % 5 === 0 && score >= 10) {
+                return "5 anni di amore moltiplicati! ❤️✖️";
+            }
+            
+            if (score >= 50) {
+                return "50 punti! Più dei viaggi di D❤️S messi insieme! ✈️🗺️";
+            }
+            
+            return null;
+        }
+
+        // ============================================
+        // LEADERBOARD MANAGER
+        // ============================================
+        class LeaderboardManager {
+            constructor(database) {
+                this.db = database;
+                this.scores = [];
+                this.maxEntries = 8;
+                this.scoresRef = ref(this.db, 'leaderboard');
+            }
+
+            async loadScores() {
+                try {
+                    const scoresQuery = query(
+                        this.scoresRef,
+                        orderByChild('score'),
+                        limitToLast(this.maxEntries)
+                    );
+                    const snapshot = await get(scoresQuery);
+                    
+                    this.scores = [];
+                    if (snapshot.exists()) {
+                        snapshot.forEach(childSnapshot => {
+                            const data = childSnapshot.val();
+                            this.scores.push({
+                                nome: data.nome,
+                                score: data.score,
+                                id: childSnapshot.key
+                            });
+                        });
+                    } else {
+                        this.scores = [
+                            { nome: "Jc.Ye", score: 121 },
+                            { nome: "Davide", score: 45 },
+                            { nome: "Silvia", score: 38 },
+                            { nome: "Mario", score: 32 },
+                            { nome: "Luigi", score: 28 },
+                            { nome: "Peach", score: 24 },
+                            { nome: "Toad", score: 18 },
+                            { nome: "Yoshi", score: 12 }
+                        ];
+                        await this.initializeDefaultScores();
+                    }
+                    this.sortScores();
+                } catch(error) {
+                    console.error("Errore caricamento scores:", error);
+                    this.scores = [
+                        { nome: "Davide", score: 45 },
+                        { nome: "Silvia", score: 38 }
+                    ];
+                }
+            }
+
+            async initializeDefaultScores() {
+                for (const score of this.scores) {
+                    const newScoreRef = push(this.scoresRef);
+                    await set(newScoreRef, {
+                        nome: score.nome,
+                        score: score.score,
+                        timestamp: Date.now()
+                    });
+                }
+            }
+
+            sortScores() {
+                this.scores.sort((a, b) => b.score - a.score);
+                this.scores = this.scores.slice(0, this.maxEntries);
+            }
+
+            isTopScore(score) {
+                if (this.scores.length < this.maxEntries) return true;
+                return score > this.scores[this.scores.length - 1].score;
+            }
+
+            async addScore(nome, score) {
+                try {
+                    const newScoreRef = push(this.scoresRef);
+                    await set(newScoreRef, {
+                        nome: nome,
+                        score: score,
+                        timestamp: Date.now()
+                    });
+                    
+                    await this.loadScores();
+                    await this.cleanupOldScores();
+                    
+                    const rank = this.scores.findIndex(s => s.nome === nome && s.score === score) + 1;
+                    return rank;
+                } catch(error) {
+                    console.error("Errore salvataggio score:", error);
+                    return -1;
+                }
+            }
+
+            async cleanupOldScores() {
+                try {
+                    const snapshot = await get(this.scoresRef);
+                    if (!snapshot.exists()) return;
+                    
+                    const allScores = [];
+                    snapshot.forEach(child => {
+                        allScores.push({
+                            key: child.key,
+                            score: child.val().score
+                        });
+                    });
+                    
+                    allScores.sort((a, b) => b.score - a.score);
+                    
+                    if (allScores.length > this.maxEntries) {
+                        for (let i = this.maxEntries; i < allScores.length; i++) {
+                            const deleteRef = ref(this.db, `leaderboard/${allScores[i].key}`);
+                            await set(deleteRef, null);
+                        }
+                    }
+                } catch(error) {
+                    console.error("Errore cleanup scores:", error);
+                }
+            }
+
+            setupRealTimeListener(callback) {
+                onValue(this.scoresRef, async (snapshot) => {
+                    await this.loadScores();
+                    if (callback) callback();
+                });
+            }
+
+            renderLeaderboard(containerId) {
+                const container = document.getElementById(containerId);
+                if (!container) return;
+                
+                container.innerHTML = '';
+                
+                if (this.scores.length === 0) {
+                    container.innerHTML = '<p style="color: #888; text-align: center;">Caricamento...</p>';
+                    return;
+                }
+                
+                this.scores.forEach((entry, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'leaderboard-item';
+                    
+                    let medal = '';
+                    if (index === 0) medal = '🥇';
+                    else if (index === 1) medal = '🥈';
+                    else if (index === 2) medal = '🥉';
+                    
+                    item.innerHTML = `
+                        <span class="rank-number">${medal} ${index + 1}</span>
+                        <span class="player-name">${entry.nome}</span>
+                        <span class="player-score">${entry.score}</span>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+        }
+
+        // ============================================
+        // GAME LOGIC
+        // ============================================
+        class EternalFlightGame {
+            constructor(leaderboard) {
+                this.canvas = document.getElementById('game-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.width = 400;
+                this.height = 600;
+                this.gameState = 'start';
+                this.leaderboard = leaderboard;
+
+                this.ring = {
+                    x: 80,
+                    y: this.height / 2,
+                    radius: 20,
+                    velocity: 0,
+                    gravity: 0.4,
+                    jump: -7.5
+                };
+
+                this.obstacles = [];
+                this.obstacleWidth = 60;
+                this.obstacleGap = 200;
+                this.baseSpeed = 2;
+                this.obstacleSpeed = this.baseSpeed;
+                this.frameCount = 0;
+                this.spawnInterval = 100;
+                this.score = 0;
+                this.particles = [];
+
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                const handleJump = () => {
+                    if (this.gameState === 'playing') {
+                        this.ring.velocity = this.ring.jump;
+                        this.createParticles(this.ring.x, this.ring.y, 5, 'heart');
+                        this.triggerHaptic();
+                    }
+                };
+
+                document.addEventListener('keydown', (e) => {
+                    if (e.code === 'Space' && this.gameState === 'playing') {
+                        e.preventDefault();
+                        handleJump();
+                    }
+                });
+
+                this.canvas.addEventListener('click', handleJump);
+                this.canvas.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    handleJump();
+                }, { passive: false });
+            }
+
+            triggerHaptic() {
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(10);
+                }
+            }
+
+            start() {
+                this.gameState = 'playing';
+                this.ring.y = this.height / 2;
+                this.ring.velocity = 0;
+                this.obstacles = [];
+                this.particles = [];
+                this.score = 0;
+                this.frameCount = 0;
+                this.obstacleSpeed = this.baseSpeed;
+                this.updateScoreDisplay();
+                this.hideStartScreen();
+                this.hideGameOverScreen();
+                this.gameLoop();
+            }
+
+            gameLoop = () => {
+                if (this.gameState !== 'playing') return;
+                this.update();
+                this.draw();
+                requestAnimationFrame(this.gameLoop);
+            }
+
+            update() {
+                this.frameCount++;
+                this.ring.velocity += this.ring.gravity;
+                this.ring.y += this.ring.velocity;
+
+                if (this.frameCount % this.spawnInterval === 0) {
+                    this.spawnObstacle();
+                }
+
+                this.obstacles.forEach(obs => {
+                    obs.x -= this.obstacleSpeed;
+                    if (!obs.scored && obs.x + this.obstacleWidth < this.ring.x) {
+                        obs.scored = true;
+                        this.score++;
+                        this.updateScoreDisplay();
+                        this.createParticles(this.ring.x, this.ring.y, 10, 'flower');
+
+                        if (this.score % 5 === 0) {
+                            this.obstacleSpeed = Math.min(4, this.baseSpeed + (this.score / 5) * 0.1);
+                        }
+                    }
+                });
+
+                this.obstacles = this.obstacles.filter(obs => obs.x > -this.obstacleWidth);
+
+                this.particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.vy += 0.1;
+                    p.life -= 0.015;
+                });
+                this.particles = this.particles.filter(p => p.life > 0);
+
+                if (this.checkCollision()) {
+                    this.gameOver();
+                }
+            }
+
+            draw() {
+                this.ctx.fillStyle = '#0a0a0a';
+                this.ctx.fillRect(0, 0, this.width, this.height);
+                
+                this.drawGrid();
+                this.obstacles.forEach(obs => this.drawObstacle(obs));
+                this.particles.forEach(p => this.drawParticle(p));
+                this.drawRing();
+            }
+
+            drawGrid() {
+                this.ctx.strokeStyle = 'rgba(212, 175, 55, 0.05)';
+                this.ctx.lineWidth = 1;
+                for (let x = 0; x < this.width; x += 40) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x, 0);
+                    this.ctx.lineTo(x, this.height);
+                    this.ctx.stroke();
+                }
+            }
+
+            drawRing() {
+                const x = this.ring.x;
+                const y = this.ring.y;
+                const r = this.ring.radius;
+
+                const gradient = this.ctx.createRadialGradient(x, y, r * 0.5, x, y, r * 2);
+                gradient.addColorStop(0, 'rgba(212, 175, 55, 0.4)');
+                gradient.addColorStop(1, 'rgba(212, 175, 55, 0)');
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(x - r * 2, y - r * 2, r * 4, r * 4);
+
+                this.ctx.strokeStyle = '#D4AF37';
+                this.ctx.lineWidth = 4;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, r, 0, Math.PI * 2);
+                this.ctx.stroke();
+
+                this.ctx.strokeStyle = '#F3E5AB';
+                this.ctx.lineWidth = 2;
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, r * 0.6, 0, Math.PI * 2);
+                this.ctx.stroke();
+
+                this.ctx.save();
+                this.ctx.translate(x, y - r * 1.3);
+                this.ctx.fillStyle = '#fff';
+                this.ctx.shadowBlur = 15;
+                this.ctx.shadowColor = '#F3E5AB';
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, -6);
+                this.ctx.lineTo(4, 0);
+                this.ctx.lineTo(0, 4);
+                this.ctx.lineTo(-4, 0);
+                this.ctx.closePath();
+                this.ctx.fill();
+                this.ctx.restore();
+            }
+
+            drawObstacle(obs) {
+                const x = obs.x;
+                
+                const gradient = this.ctx.createLinearGradient(x, 0, x + this.obstacleWidth, 0);
+                gradient.addColorStop(0, 'rgba(40, 40, 40, 0.9)');
+                gradient.addColorStop(0.5, 'rgba(60, 60, 60, 1)');
+                gradient.addColorStop(1, 'rgba(40, 40, 40, 0.9)');
+
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(x, 0, this.obstacleWidth, obs.topHeight);
+                
+                this.ctx.strokeStyle = 'rgba(212, 175, 55, 0.5)';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(x, 0, this.obstacleWidth, obs.topHeight);
+
+                if (obs.topHeight > 30) {
+                    this.ctx.fillStyle = '#D4AF37';
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(x + this.obstacleWidth / 2, obs.topHeight - 25);
+                    this.ctx.lineTo(x + this.obstacleWidth / 2 - 8, obs.topHeight - 20);
+                    this.ctx.lineTo(x + this.obstacleWidth / 2 + 8, obs.topHeight - 20);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                    
+                    this.ctx.fillRect(x + this.obstacleWidth / 2 - 3, obs.topHeight - 20, 6, 10);
+                }
+
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(x, obs.bottomY, this.obstacleWidth, this.height - obs.bottomY);
+                
+                this.ctx.strokeStyle = 'rgba(212, 175, 55, 0.5)';
+                this.ctx.strokeRect(x, obs.bottomY, this.obstacleWidth, this.height - obs.bottomY);
+
+                for (let i = 0; i < 3; i++) {
+                    const buttonY = obs.bottomY + 20 + (i * 20);
+                    if (buttonY < this.height - 10) {
+                        this.ctx.fillStyle = '#F3E5AB';
+                        this.ctx.beginPath();
+                        this.ctx.arc(x + this.obstacleWidth / 2, buttonY, 3, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+                }
+            }
+
+            spawnObstacle() {
+                const minHeight = 80;
+                const maxHeight = this.height - this.obstacleGap - minHeight;
+                const topHeight = Math.random() * (maxHeight - minHeight) + minHeight;
+                
+                this.obstacles.push({
+                    x: this.width,
+                    topHeight: topHeight,
+                    bottomY: topHeight + this.obstacleGap,
+                    scored: false
+                });
+            }
+
+            checkCollision() {
+                const r = this.ring.radius;
+                const rx = this.ring.x;
+                const ry = this.ring.y;
+
+                if (ry - r <= 0 || ry + r >= this.height) {
+                    return true;
+                }
+
+                for (let obs of this.obstacles) {
+                    if (rx + r > obs.x && rx - r < obs.x + this.obstacleWidth) {
+                        if (ry - r < obs.topHeight || ry + r > obs.bottomY) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+
+            createParticles(x, y, count, type = 'heart') {
+                for (let i = 0; i < count; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 2 + 1;
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - 1,
+                        life: 1,
+                        size: Math.random() * 4 + 3,
+                        type: type
+                    });
+                }
+            }
+
+            drawParticle(p) {
+                this.ctx.save();
+                this.ctx.globalAlpha = p.life;
+                
+                if (p.type === 'heart') {
+                    this.ctx.fillStyle = '#ff69b4';
+                    this.ctx.translate(p.x, p.y);
+                    this.ctx.scale(p.size / 10, p.size / 10);
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, 3);
+                    this.ctx.bezierCurveTo(-5, -2, -10, 1, 0, 10);
+                    this.ctx.bezierCurveTo(10, 1, 5, -2, 0, 3);
+                    this.ctx.closePath();
+                    this.ctx.fill();
+                } else if (p.type === 'flower') {
+                    this.ctx.fillStyle = '#D4AF37';
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    
+                    this.ctx.fillStyle = '#F3E5AB';
+                    for (let i = 0; i < 5; i++) {
+                        const angle = (i / 5) * Math.PI * 2;
+                        const px = p.x + Math.cos(angle) * p.size * 0.7;
+                        const py = p.y + Math.sin(angle) * p.size * 0.7;
+                        this.ctx.beginPath();
+                        this.ctx.arc(px, py, p.size * 0.5, 0, Math.PI * 2);
+                        this.ctx.fill();
+                    }
+                } else {
+                    this.ctx.fillStyle = '#D4AF37';
+                    this.ctx.beginPath();
+                    this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+                
+                this.ctx.restore();
+            }
+
+            async gameOver() {
+                this.gameState = 'gameover';
+                this.createParticles(this.ring.x, this.ring.y, 30, 'heart');
+                
+                if (this.leaderboard && this.leaderboard.isTopScore(this.score)) {
+                    this.showNameInput();
+                } else {
+                    this.showGameOverScreen();
+                }
+            }
+
+            showNameInput() {
+                const modal = document.getElementById('name-input-modal');
+                const input = document.getElementById('player-name-input');
+                input.value = '';
+                modal.classList.add('active');
+                setTimeout(() => input.focus(), 300);
+            }
+
+            async submitScore(playerName) {
+                if (this.leaderboard) {
+                    const rank = await this.leaderboard.addScore(playerName, this.score);
+                    if (rank > 0) {
+                        this.showRankAchievement(rank);
+                    } else {
+                        this.showGameOverScreen();
+                    }
+                } else {
+                    this.showGameOverScreen();
+                }
+            }
+
+            showRankAchievement(rank) {
+                const modal = document.getElementById('rank-modal');
+                const emoji = document.getElementById('rank-emoji');
+                const message = document.getElementById('rank-message');
+                const joke = document.getElementById('joke-message');
+
+                const { message: rankMsg, joke: rankJoke } = getTop8Message(rank);
+
+                let emojiText = '🏆';
+                if (rank === 1) emojiText = '🥇👑';
+                else if (rank === 2) emojiText = '🥈';
+                else if (rank === 3) emojiText = '🥉';
+
+                emoji.textContent = emojiText;
+                message.textContent = rankMsg;
+                joke.textContent = rankJoke;
+
+                modal.classList.add('active');
+            }
+
+            updateScoreDisplay() {
+                document.getElementById('score-display').textContent = this.score;
+            }
+
+            hideStartScreen() {
+                document.getElementById('game-start-screen').style.display = 'none';
+            }
+
+            showGameOverScreen() {
+                const gameOverScreen = document.getElementById('game-over-screen');
+                document.getElementById('final-score').textContent = `Punteggio: ${this.score}`;
+                
+                // Easter Egg
+                const easterEgg = getScoreEasterEgg(this.score);
+                const easterContainer = document.getElementById('easter-egg-container');
+                if (easterEgg) {
+                    easterContainer.innerHTML = `<div class="easter-egg-message">${easterEgg}</div>`;
+                } else {
+                    easterContainer.innerHTML = '';
+                }
+                
+                // Joke Message
+                const jokeMessage = getGameOverMessage(this.score);
+                const jokeContainer = document.getElementById('joke-container');
+                if (jokeMessage) {
+                    jokeContainer.innerHTML = `<div class="joke-message-gameover">${jokeMessage}</div>`;
+                } else {
+                    jokeContainer.innerHTML = '';
+                }
+                
+                gameOverScreen.style.display = 'block';
+                if (this.leaderboard) {
+                    this.leaderboard.renderLeaderboard('leaderboard-gameover');
+                }
+            }
+
+            hideGameOverScreen() {
+                document.getElementById('game-over-screen').style.display = 'none';
+            }
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        let game = null;
+        let leaderboard = null;
+
+        leaderboard = new LeaderboardManager(database);
+        
+        leaderboard.loadScores().then(() => {
+            leaderboard.renderLeaderboard('leaderboard-list');
+            
+            leaderboard.setupRealTimeListener(() => {
+                leaderboard.renderLeaderboard('leaderboard-list');
+                leaderboard.renderLeaderboard('leaderboard-gameover');
+            });
+        });
+
+        document.getElementById('game-start-screen').style.display = 'block';
+        game = new EternalFlightGame(leaderboard);
+
+        document.getElementById('start-game-btn').addEventListener('click', () => {
+            if (game) game.start();
+        });
+
+        document.getElementById('restart-game-btn').addEventListener('click', () => {
+            if (game) game.start();
+        });
+
+        document.getElementById('submit-name-btn').addEventListener('click', async () => {
+            const nameInput = document.getElementById('player-name-input');
+            const playerName = nameInput.value.trim();
+            
+            if (playerName.length > 0) {
+                document.getElementById('name-input-modal').classList.remove('active');
+                await game.submitScore(playerName);
+            } else {
+                nameInput.style.borderBottomColor = '#ff4444';
+                nameInput.placeholder = 'Nome obbligatorio!';
+                setTimeout(() => {
+                    nameInput.style.borderBottomColor = '';
+                    nameInput.placeholder = 'Il tuo nome';
+                }, 1000);
+            }
+        });
+
+        document.getElementById('rank-ok-btn').addEventListener('click', () => {
+            document.getElementById('rank-modal').classList.remove('active');
+            game.showGameOverScreen();
+        });
+
+        document.getElementById('player-name-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('submit-name-btn').click();
+            }
+        });
+
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        }, false);
+    </script>
+</body>
+</html>

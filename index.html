@@ -317,6 +317,42 @@
             #main-content { display: flex; flex-direction: row; }
             .header-overlay { width: 50%; left: auto; right: 0; }
         }
+		/* Stile per il link Game */
+a#btn-game {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.5);
+    padding: 10px 8px;
+    cursor: pointer;
+    font-family: 'Cinzel', serif;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    position: relative;
+    transition: color 0.4s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+a#btn-game::after {
+    content: '';
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    width: 0;
+    height: 1px;
+    background: var(--gold);
+    transition: all 0.4s ease;
+    transform: translateX(-50%);
+}
+
+a#btn-game:hover {
+    color: white;
+}
+
+a#btn-game:hover::after {
+    width: 80%;
+}
     </style>
 </head>
 <body>
@@ -363,6 +399,7 @@
                     <button id="btn-sphere">Sfera</button>
                     <button id="btn-heart">Cuore</button>
                     <button id="btn-infinity">Infinito</button> <button id="btn-torus" class="active">Anello</button>
+					<a href="game.html" id="btn-game">💍</a>
                 </div>
                 <div class="zoom-container">
                     <span class="zoom-label">-</span>
